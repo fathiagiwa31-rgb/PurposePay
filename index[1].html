@@ -1,0 +1,680 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>PurposePay</title>
+<link rel="manifest" href="manifest.webmanifest">
+<meta name="theme-color" content="#0f7a4f">
+<link rel="icon" href="icons/icon-192.png">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="PurposePay">
+<style>
+:root{--bg:#f5f3ee;--panel:#fff;--ink:#1d2a24;--mute:#5f6d66;--line:#dcd8cd;--accent:#0f7a4f;--on:#fff;--bad:#b3261e;--ok:#0f7a4f;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#101a15;--panel:#18251e;--ink:#e8efea;--mute:#98a8a0;--line:#2b3d33;--accent:#4cc88e;--on:#06231a;--bad:#ff8a80;--ok:#4cc88e}}
+:root[data-theme="dark"]{--bg:#101a15;--panel:#18251e;--ink:#e8efea;--mute:#98a8a0;--line:#2b3d33;--accent:#4cc88e;--on:#06231a;--bad:#ff8a80;--ok:#4cc88e}
+[hidden]{display:none!important}
+*,*::before,*::after{box-sizing:inherit}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.45 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
+#app{max-width:460px;margin:0 auto;padding:12px 14px 96px}
+header{display:flex;justify-content:space-between;align-items:center;padding:4px 2px 10px}
+h1{font-size:18px;margin:0}h2{font-size:15px;margin:12px 0 6px}
+.sub{color:var(--mute);font-size:13px}
+.hero{background:var(--accent);color:var(--on);border-radius:14px;padding:16px;margin-bottom:10px}
+.hero .sub{color:inherit;opacity:.85}.big{font-size:32px;font-weight:700;letter-spacing:-.02em}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:10px;margin-bottom:8px}
+.card.ok{border-left:5px solid var(--ok)}.inc{border-left:5px solid #e0a030}
+.ln{display:flex;gap:8px;align-items:center;padding:5px 0;border-bottom:1px solid var(--line);font-size:14px}
+.ln:last-child{border:0}.ln b{margin-left:auto}.bad{color:var(--bad)}
+.tiles{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:10px}
+.tile{font:inherit;color:inherit;background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:10px 4px;font-size:13px;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:4px;font-weight:600}
+.tile span{font-size:26px}.tile.on{border-color:var(--accent);box-shadow:0 0 0 2px var(--accent) inset}
+label{display:flex;flex-direction:column;gap:3px;font-size:12px;color:var(--mute);margin-bottom:8px}
+input,select{font:inherit;color:inherit;background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:8px;min-width:0;width:100%}
+.btn{font:inherit;background:var(--accent);color:var(--on);border:0;border-radius:8px;padding:10px;font-weight:600;cursor:pointer;width:100%;margin-top:4px}
+.mini{font:inherit;font-size:13px;background:none;color:var(--ink);border:1px solid var(--line);border-radius:6px;padding:4px 10px;cursor:pointer}
+.mini.pri{background:var(--accent);color:var(--on);border-color:var(--accent)}
+.row{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}
+.r2{display:grid;grid-template-columns:1fr 1.4fr auto;gap:6px;margin-top:8px;align-items:center}
+.seg{display:flex;height:14px;border-radius:4px;overflow:hidden;background:var(--line);margin:8px 0 4px}.seg i{display:block;min-width:3px}
+.bar{height:8px;border-radius:4px;background:var(--line);overflow:hidden;margin:6px 0}.bar i{display:block;height:100%;background:var(--accent)}
+.bc{border-left:5px solid var(--c);background:var(--panel);border:1px solid var(--line);border-left:5px solid var(--c);border-radius:8px;padding:8px 10px;margin-bottom:8px;display:grid;grid-template-columns:44px 1fr auto;align-items:center}
+.hd{display:inline-block;cursor:grab;touch-action:none;user-select:none;padding:4px 6px 4px 0}
+.bc.drag{box-shadow:0 4px 16px rgba(0,0,0,.28)}
+.ctl{grid-column:2/4;display:flex;gap:6px;margin-top:6px}
+.tok{font:600 16px ui-monospace,Menlo,monospace;background:var(--bg);padding:8px;border-radius:8px;margin:8px 0}
+#toast p{margin:0 0 10px;padding:8px 12px;border-radius:8px;background:var(--panel);border:1px solid var(--line);border-left:5px solid var(--ok);font-size:14px}
+#toast p.bad{border-left-color:var(--bad)}
+nav{position:fixed;left:0;right:0;bottom:0;background:var(--panel);border-top:1px solid var(--line);padding:6px 0 calc(6px + env(safe-area-inset-bottom,0px))}
+nav div{max-width:460px;margin:0 auto;display:grid;grid-template-columns:repeat(5,1fr)}
+nav button{font:inherit;font-size:11px;background:none;border:0;color:var(--mute);cursor:pointer;padding:4px 0;display:flex;flex-direction:column;align-items:center;gap:1px}
+nav button span{font-size:20px}nav button.on{color:var(--accent);font-weight:700}
+.prodc{font:inherit;color:inherit;text-align:left;width:100%;display:grid;grid-template-columns:40px 1fr auto;gap:8px;align-items:center;background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:10px;margin-bottom:8px;cursor:pointer}
+.pi{font-size:26px;text-align:center}.pt,.pb{display:flex;flex-direction:column}.pb{align-items:flex-end}.prodc .bar{margin:4px 0 0}
+.actions{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:10px 0}.actions .btn{margin:0}
+.hero .bar{background:rgba(255,255,255,.3)}.hero .bar i{background:#fff}
+.cardbtn{display:block;width:100%;background:none;border:0;padding:0;margin-bottom:10px;text-align:left;font:inherit;color:inherit;cursor:pointer}
+.ccard{position:relative;border-radius:14px;padding:14px;color:#fff;background:linear-gradient(135deg,#0f7a4f,#0b3d2b);min-height:150px;display:flex;flex-direction:column;justify-content:space-between}
+.ccard.virt{background:linear-gradient(135deg,#6b5bd2,#2c2470)}
+.ccard.frz{filter:grayscale(1);opacity:.7}
+.ct,.cb{display:flex;justify-content:space-between;font-size:13px}
+.cn{font:600 18px ui-monospace,Menlo,monospace;letter-spacing:.06em}
+.fz{position:absolute;right:14px;top:44px;border:1px solid #fff;border-radius:6px;padding:1px 8px;font-size:12px;transform:rotate(-8deg)}
+.phone{background:var(--panel);border:1px solid var(--line);border-radius:18px;padding:12px;max-width:340px;margin:8px auto}
+.ussd{background:#0d1512;color:#9df5c4;font:14px/1.45 ui-monospace,Menlo,monospace;border-radius:10px;padding:12px;min-height:150px;white-space:pre-wrap;margin:0 0 8px}
+.txr{width:100%;background:none;border:0;border-bottom:1px solid var(--line);font:inherit;color:inherit;text-align:left;cursor:pointer}
+.proto{background:#e0a030;color:#1d2a24;font-size:12px;font-weight:600;text-align:center;padding:4px 8px;border-radius:8px;margin-bottom:6px}.proto:empty{display:none}
+.btn.alt{background:none;color:var(--ink);border:1px solid var(--line)}
+.quick{display:grid;grid-template-columns:repeat(5,1fr);gap:6px;margin:8px 0}
+.quick button{font:inherit;font-size:11px;color:inherit;background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:8px 2px;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:2px}
+.quick span{font-size:20px}
+.quick.g4{grid-template-columns:repeat(4,1fr)}
+.ck{flex-direction:row;align-items:center;gap:8px;color:var(--ink);font-size:14px;margin-bottom:4px}
+.ck input{width:auto}
+.subtabs{display:grid;grid-template-columns:repeat(3,1fr);gap:4px;background:var(--line);padding:3px;border-radius:10px;margin:8px 0}
+.subtabs button{font:inherit;font-size:12px;border:0;background:none;color:var(--ink);padding:7px 2px;border-radius:8px;cursor:pointer}
+.subtabs button.on{background:var(--panel);font-weight:700;box-shadow:0 1px 3px rgba(0,0,0,.15)}
+summary{cursor:pointer;padding:2px 0}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+</style>
+</head>
+<body>
+<div id="app">
+  <div id="proto" class="proto"></div>
+  <header id="hdr"></header>
+  <div id="toast" aria-live="polite"></div>
+  <main id="view"></main>
+</div>
+<nav><div id="nav"></div></nav>
+<script>
+const $=s=>document.querySelector(s);
+const esc=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const clean=s=>String(s).replace(/[<>&"'`]/g,'').trim().slice(0,24);
+const N=v=>'₦'+Math.round(v).toLocaleString('en-NG');
+const PAL=['#0f7a4f','#e0a030','#6b5bd2','#d9534f','#3a86c8','#b05fa0','#8d6e63'];
+const S={b:[['food','🍴','Food',8000],['data','📱','Data',4200],['laundry','👕','Laundry',1000],['school','🎓','School',1500],['personal','👤','Personal',800],['elec','💡','Electricity',3000],['un','🪙','Unallocated',500]].map(([id,ic,n,bal],i)=>({id,ic,n,bal,locked:false,c:id==='un'?'#8a96a0':PAL[i%7]})),
+  order:['food','personal','data','school','laundry','elec','un'],piggy:1200,goals:[{id:1,n:'School shoes',t:6000,s:1500,i:0,end:60}],locks:[],sched:[],day:0,free:2,ask:'',rev:{bills:0,pos:0,spread:0,pen:0,rw:0,card:0},ob:'welcome',sv:'',open:'',hide:false,hist:{},mv:'',prefs:[{id:900,n:'Pocket money first',for:'piggy',ids:['personal','un']},{id:901,n:'Spare cash',for:'long',ids:['un','personal']}],dsrc:{piggy:'prio',target:'prio',long:'prio'},notif:{sav:true,bills:true,promo:false},ulim:null,pts:0,theme:'',cards:[{id:700,type:'physical',name:'PURPOSEPAY DEBIT',num:'9999123450004821',exp:'10/29',cvv:'318',frozen:false,limit:null,bind:'',status:'active',day:0,spent:0}],cv:'',reveal:0,sas:{on:false,pick:'pct:5',to:'piggy',src:'prio',total:0},us:{st:'idle',t:'',d:{},tries:0},myv:[{code:'WELCOME500',txt:'Welcome gift',kind:'cash',v:500}],vused:[],refc:0,refUsed:false,txs:[],tid:0,tf:'',lastSend:null,user:null,reg:null,upg:false,sub:'piggy',enq:null,tfeat:true,sent:{d:0,a:0},
+  mode:'auto',active:'food',log:[],pend:[],seq:1,tab:'home',svc:'',rc:null,pos:'',msg:'',bad:false,feat:true,from:'Aunty Ngozi (UK)'};
+const SR=S.b.filter(b=>b.id!=='un').map(b=>({n:b.n,ic:b.ic,amt:b.id==='food'?5000:b.id==='school'?15000:0}));
+const NET=['MTN','Airtel','Glo','9mobile'],PLANS=[['1 GB, 7 days',600],['3 GB, 30 days',1500],['10 GB, 30 days',3500]],DISCO=['IBEDC','Ikeja Electric','Eko Electric','Abuja Electric','Enugu Electric'],BETS=['Bet9ja','SportyBet','BetKing'];
+const RATES={3:8,6:10,12:12};
+const PIG=5,GOAL=7,BANK=12,PEN=0.02,COMM={airtime:2,data:3,elec:1,betting:0,tv:2},EV={1:'day',7:'week',30:'month'};
+const BASE=new Date().setHours(0,0,0,0);
+const dayStr=d=>new Date(BASE+d*864e5).toLocaleDateString('en-NG',{day:'numeric',month:'short',year:'numeric'});
+const dayOf=s=>Math.round((new Date(s+'T00:00:00').getTime()-BASE)/864e5);
+const iso=d=>{const t=new Date(BASE+d*864e5);return t.getFullYear()+'-'+String(t.getMonth()+1).padStart(2,'0')+'-'+String(t.getDate()).padStart(2,'0')};
+const MERCH=[['Shoprite supermarket','food'],['Mama Put canteen','food'],['MTN data bundle','data'],['Campus laundry','laundry'],['School fees portal','school'],['Fashion boutique','personal'],['Electricity vendor','elec'],['POS agent: cash withdrawal','']];
+const LIM={1:50000,2:200000,3:5000000},tierOf=u=>u.bvn?(u.nin?3:2):1;
+const BANKS=['PurposePay','Access Bank','GTBank','First Bank','UBA','Zenith Bank','Moniepoint','OPay','Kuda','PalmPay'];
+const NAMES=['CHIDINMA OKAFOR','TUNDE ADEBAYO','AMINA BELLO','EMEKA NWOSU','FUNKE AKINTOLA','IBRAHIM MUSA','NGOZI EZE','SEUN BALOGUN'];
+const TR=['Food','School','Data','Personal','Laundry','Electricity'].map(n=>{const b=S.b.find(x=>x.n===n);return{n,ic:b?b.ic:'📌',amt:0}});
+const CAP=15,PCAP=1000000,CATS={'Rent':'🏠','School fees':'🎓','Travel':'✈️','Emergency':'🛟','Gadget':'💻','Other':'🎯'},PACKS=[['Basic',2500],['Standard',6000],['Premium',15000]];
+const lockRate=(mo,a)=>Math.min(CAP,({3:8,6:10,12:12}[mo]||8)+(a>=1e6?3:a>=5e5?2:a>=1e5?1:0));
+const limOf=u=>Math.min(LIM[u.tier],S.ulim||Infinity);
+const earn=n=>{if(n>0)S.pts+=n};
+const get=id=>S.b.find(b=>b.id===id);
+const nm=id=>{const b=get(id);return b?b.ic+' '+esc(b.n):'Deleted budget'};
+const L=(t,bad,tx)=>{S.log.unshift({t,bad,d:S.day,tx});S.log.length=Math.min(S.log.length,30)};
+const say=(m,bad)=>{S.msg=m;S.bad=!!bad};
+const val=(f,n)=>(f&&f.querySelector('[name="'+n+'"]')||{}).value||'';
+const split=takes=>takes.map(t=>nm(t.id)+' '+N(t.amt)).join(' · ');
+const bar=takes=>'<div class="seg">'+takes.map(t=>'<i style="flex:'+t.amt+';background:'+(get(t.id)||{c:'#8a96a0'}).c+'"></i>').join('')+'</div>';
+const betIds=()=>S.b.filter(b=>/bet/i.test(b.n)||b.id==='un').map(b=>b.id);
+const srcOpt=(sel,ids)=>(ids||S.order).map(i=>{const b=get(i);return '<option value="'+i+'"'+(i===sel?' selected':'')+'>'+b.ic+' '+esc(b.n)+' ('+N(b.bal)+')</option>'}).join('');
+const sel=(n,l,a)=>'<label>'+l+'<select name="'+n+'">'+a.map(x=>'<option>'+x+'</option>').join('')+'</select></label>';
+const inp=(n,l,ph,x)=>'<label>'+l+'<input name="'+n+'" placeholder="'+ph+'" '+x+'></label>';
+const tok=()=>Array.from({length:5},()=>String(1000+Math.floor(Math.random()*9000))).join(' ');
+
+function mk(name,ic){
+  const n=clean(name);let b=S.b.find(x=>x.n.toLowerCase()===n.toLowerCase());
+  if(b)return b;
+  b={id:'c'+(++S.seq),ic:ic||'📌',n,bal:0,locked:false,c:PAL[S.b.length%7]};
+  S.b.push(b);S.order.splice(S.order.indexOf('un'),0,b.id);return b;
+}
+function spend(amt,prim,allowed){
+  let need=amt;const takes=[];
+  const ids=(prim&&get(prim)?[prim]:[]).concat(S.order.filter(i=>i!==prim));
+  for(const id of ids){
+    if(need<=0)break;
+    if(allowed&&!allowed.includes(id))continue;
+    const b=get(id);if(id!==prim&&b.locked)continue;
+    const t=Math.min(b.bal,need);if(t>0){takes.push({id,amt:t});need-=t}
+  }
+  if(need>0)return{ok:false,short:need};
+  takes.forEach(t=>get(t.id).bal-=t.amt);
+  return{ok:true,takes};
+}
+function spendIds(amt,ids){let need=amt;const takes=[];for(const id of ids){if(need<=0)break;const b=get(id);if(!b)continue;const t=Math.min(b.bal,need);if(t>0){takes.push({id,amt:t});need-=t}}if(need>0)return{ok:false,short:need};takes.forEach(t=>get(t.id).bal-=t.amt);return{ok:true,takes}}
+function runSrc(src,amt){
+  if(src==='prio')return spend(amt,'',null);
+  if(src.startsWith('pref:')){const p=S.prefs.find(x=>x.id===+src.slice(5));return spendIds(amt,p?p.ids:[])}
+  return spendIds(amt,[src]);
+}
+const srcLabel=src=>src==='prio'?'⭐ my budget priority':src.startsWith('pref:')?'📋 '+esc((S.prefs.find(x=>x.id===+src.slice(5))||{n:'preference'}).n):nm(src);
+const savOpt=(kind,sel)=>{const d=sel||S.dsrc[kind]||'prio';return '<option value="prio"'+(d==='prio'?' selected':'')+'>⭐ My budget priority order</option>'+S.prefs.filter(p=>p.for===kind).map(p=>'<option value="pref:'+p.id+'"'+(d==='pref:'+p.id?' selected':'')+'>📋 '+esc(p.n)+'</option>').join('')+srcOpt(d)};
+function take(f){
+  const a=Math.round(+val(f,'amt')),src=val(f,'src');
+  if(!(a>0))return[0,'Enter an amount above ₦0.'];
+  if(src!=='prio'&&!src.startsWith('pref:')&&!get(src))return[0,'Pick where the money should come from.'];
+  const r=runSrc(src,a);
+  if(!r.ok)return[0,(src==='prio'?'Your budget priority order':src.startsWith('pref:')?'That preference':get(src).n)+' has only '+N(a-r.short)+' available.'];
+  return[a,'',r.takes];
+}
+const auto=k=>k==='airtime'||k==='data'?'data':k==='elec'?'elec':k==='tv'?'':((S.b.find(b=>/bet/i.test(b.n))||{}).id||'');
+
+function doPay(f){
+  const k=f.dataset.k,v=n=>val(f,n).trim();
+  let amt=Math.round(+v('amt'));
+  if(k==='data')amt=PLANS[+v('plan')][1];
+  if(k==='tv')amt=PACKS[+v('pack')][1];
+  const MIN={airtime:50,elec:500,betting:100,data:1,tv:1};
+  if((k==='airtime'||k==='data')&&!/^0\d{10}$/.test(v('phone')))return say('Enter an 11-digit phone number starting with 0.',1);
+  if(k==='elec'&&!/^\d{11,13}$/.test(v('meter')))return say('Enter your 11 to 13 digit meter number.',1);
+  if(k==='betting'&&v('cid').length<4)return say('Enter your betting account ID.',1);
+  if(k==='tv'&&!/^\d{10}$/.test(v('card')))return say('Enter your 10-digit smartcard or IUC number.',1);
+  if(!(amt>=MIN[k]))return say('The minimum amount is '+N(MIN[k])+'.',1);
+  const from=v('from'),r=spend(amt,from==='auto'?auto(k):from,k==='betting'?betIds():null);
+  if(!r.ok)return say('Not enough money in the budgets allowed for this payment. Short by '+N(r.short)+'.'+(k==='betting'?' Betting can only use a Betting budget or Unallocated.':''),1);
+  let title,lines;
+  if(k==='airtime'){title='Airtime sent';lines=[v('net')+' airtime '+N(amt),'To '+esc(v('phone'))]}
+  else if(k==='data'){const p=PLANS[+v('plan')];title='Data bundle sent';lines=[v('net')+' '+p[0],'To '+esc(v('phone'))]}
+  else if(k==='betting'){title='Betting wallet funded';lines=[v('bet')+' '+N(amt),'Account '+esc(v('cid'))]}
+  else if(k==='tv'){title='TV subscription paid';lines=[v('prov')+' '+PACKS[+v('pack')][0]+' '+N(amt),'Smartcard '+esc(v('card'))]}
+  else{title='Electricity paid';lines=[v('disco')+' '+v('mt')+' '+N(amt),'Meter '+esc(v('meter'))]}
+  S.rc={title,lines,takes:r.takes,token:k==='elec'?tok():''};
+  S.rev.bills+=amt*COMM[k]/100;
+  earn(Math.floor(amt/200));
+  L('<b>'+N(amt)+'</b> '+lines[0]+' paid from '+split(r.takes),0,TX(title,amt,r.takes,'bill'));
+  spendSave(amt);
+}
+
+function run(t){
+  const k=t.dataset.act,id=t.dataset.id,f=t.closest('.frm'),fid=f&&f.dataset.id,a0=()=>Math.round(+val(f,'amt'));
+  switch(k){
+  case 'svc':S.svc=id;S.rc=null;break;
+  case 'done':S.rc=null;S.svc='';S.enq=null;S.tab='home';break;
+  case 'pay':f.dataset.k==='tx'?doSend(f):doPay(f);break;
+  case 'pig-in':{const[a,e,tk]=take(f);if(e)return say(e,1);S.piggy+=a;earn(Math.floor(a/100));H('piggy','+ '+N(a)+' added');L('Saved <b>'+N(a)+'</b> in 🐷 Piggy bank',0,TX('Saved in Piggy bank',a,tk,'save'));say('Saved '+N(a)+'.');break}
+  case 'pig-out':{const a=a0();if(!(a>0&&a<=S.piggy))return say('Enter an amount up to '+N(S.piggy)+'.',1);S.piggy-=a;get('un').bal+=a;H('piggy','− '+N(a)+' withdrawn');L('Took <b>'+N(a)+'</b> out of 🐷 Piggy bank into '+nm('un'));say('Moved to Unallocated.');break}
+  case 'goal-new':{const cat=val(f,'cat')||'Other',n=clean(val(f,'n'))||cat,tg=Math.round(+val(f,'t')),end=dayOf(val(f,'end'));if(!n||!(tg>0))return say('Give the goal a name and a target amount.',1);if(!(end>S.day))return say('Pick a target date after today.',1);S.goals.push({id:++S.seq,n,t:tg,s:0,i:0,end,ic:CATS[cat]||'🎯'});H('g'+S.seq,'Target created: '+N(tg)+' by '+dayStr(end));L('Created target <b>'+esc(n)+'</b> of '+N(tg)+' by '+dayStr(end));S.sv='target';break}
+  case 'goal-in':{const g=S.goals.find(x=>x.id===+fid),[a,e,tk]=take(f);if(e)return say(e,1);g.s+=a;earn(Math.floor(a/100));H('g'+g.id,'+ '+N(a)+' added');L('Added <b>'+N(a)+'</b> to target '+esc(g.n),0,TX('Added to target '+g.n,a,tk,'save'));say(g.s+g.i>=g.t?'Goal reached! 🎉':'Added '+N(a)+'.');break}
+  case 'ask':S.ask=id;break;
+  case 'ask-no':S.ask='';break;
+  case 'goal-del':{const g=S.goals.find(x=>x.id===+id);if(!g)break;const c=brkCalc(S.day<g.end&&g.s+g.i<g.t,g.s,g.i);if(c.free)S.free--;get('un').bal+=c.pay;S.rev.pen+=c.fee+c.forfeit;S.goals=S.goals.filter(x=>x!==g);S.sched=S.sched.filter(x=>x.to!==String(g.id));S.ask='';S.sv='target';L('Closed target '+esc(g.n)+': <b>'+N(c.pay)+'</b> paid into '+nm('un')+(c.fee?' (fee '+N(c.fee)+', interest lost '+N(c.forfeit)+')':c.free?' (used a free early break)':''));say('Target closed. '+N(c.pay)+' is in Unallocated.');break}
+  case 'lock-new':{const n=clean(val(f,'n'));if(!n)return say('Give this lock a name.',1);const[a,e,tk]=take(f);if(e)return say(e,1);const mo=+val(f,'mo'),up=val(f,'pay')==='up',rate=lockRate(mo,a),upInt=up?Math.round(a*rate/100*mo/12):0;S.locks.push({id:++S.seq,n,amt:a,mo,rate,i:0,end:S.day+mo*30,up,upInt});H('l'+S.seq,'Locked '+N(a)+' for '+mo+' months'+(up?'. Interest paid up front: '+N(upInt):''));earn(Math.floor(a/100));if(up){get('un').bal+=upInt;S.rev.spread-=upInt}L('Locked <b>'+N(a)+'</b> for '+mo+' months in '+esc(n)+(up?'. Interest of <b>'+N(upInt)+'</b> paid up front into '+nm('un'):''),0,TX('Locked in '+n,a,tk,'save'));S.sv='long';break}
+  case 'lock-del':{const l=S.locks.find(x=>x.id===+id);if(!l)break;const c=brkCalc(S.day<l.end,l.amt,l.up?0:l.i);let pay=c.pay;if(l.up&&S.day<l.end){pay=Math.max(0,pay-l.upInt);S.rev.spread+=l.upInt}if(c.free)S.free--;get('un').bal+=pay;S.rev.pen+=c.fee+c.forfeit;S.locks=S.locks.filter(x=>x!==l);S.ask='';L('Broke lock '+esc(l.n)+': <b>'+N(pay)+'</b> paid into '+nm('un')+(c.fee?' (fee '+N(c.fee)+', interest lost)':c.free?' (used a free early break)':''));say('Lock closed. '+N(pay)+' is in Unallocated.');break}
+  case 'sch-new':{const amt=a0(),first=dayOf(val(f,'start')),to=val(f,'to'),src=val(f,'src'),every=+val(f,'every');if(!(amt>0))return say('Enter an amount above ₦0.',1);if(!(first>S.day))return say('Pick a start date after today.',1);S.sched.push({id:++S.seq,to,src,amt,every,next:first,time:val(f,'time')||'09:00'});L('Auto-save set: <b>'+N(amt)+'</b> from '+srcLabel(src)+' every '+EV[every]+', starting '+dayStr(first));say('Auto-save started.');break}
+  case 'sch-del':S.sched=S.sched.filter(x=>x.id!==+id);break;
+  case 'adv':advance(+id);break;
+  case 'b-ask':S.ask='b'+id;break;
+  case 'b-del':{const b=get(id);if(!b||id==='un')break;get('un').bal+=b.bal;S.b=S.b.filter(x=>x!==b);S.order=S.order.filter(x=>x!==id);S.sched=S.sched.filter(x=>x.src!==id);S.prefs.forEach(p=>{p.ids=p.ids.filter(i=>i!==id)});Object.keys(S.dsrc).forEach(k2=>{if(S.dsrc[k2]===id)S.dsrc[k2]='prio'});if(S.active===id)S.active='un';S.ask='';L('Deleted budget <b>'+esc(b.n)+'</b>. '+N(b.bal)+' moved to '+nm('un'));say('Budget deleted.');break}
+  case 'go':{const[t,sv]=id.split(':');S.tab=t;S.svc=t==='pay'?sv||'':'';if(t==='me')S.mv=sv||'';S.sv=t==='save'?sv||'':'';if(t==='card')S.cv=sv||'';S.rc=null;break}
+  case 'sv':S.sv=id;S.open='';S.ask='';break;
+  case 'op':S.open=S.open===id?'':id;break;
+  case 'hide':S.hide=!S.hide;break;
+  case 'enq':{const bank=val(f,'bank'),acct=val(f,'acct').trim();if(!/^\d{10}$/.test(acct))return say('An account number has 10 digits.',1);if(S.user&&S.user.acct===acct)return say('That is your own account.',1);const sum=[...acct].reduce((a,c)=>a+ +c,0);S.enq={bank,acct,name:NAMES[sum%NAMES.length],pp:bank==='PurposePay'};break}
+  case 'enq-no':S.enq=null;break;
+  case 'tadd':{const n=clean(val(f,'tn'));if(n&&!TR.some(r=>r.n.toLowerCase()===n.toLowerCase()))TR.push({n,ic:'📌',amt:0});break}
+  case 'prev':{const p=S.lastSend;if(!p)break;get('un').bal+=p.amt;S.pend.push({id:++S.seq,from:p.from+' (preview)',amt:p.amt,split:p.split});S.lastSend=null;say('Added to Home as an incoming transfer.');break}
+  case 'ob-go':S.ob=id;break;
+  case 'ob-demo':S.user={first:'Demo',name:'Demo User',phone:'08000000000',acct:'8000000000',bvn:true,nin:true,tier:3,pin:'1234',pw:''};S.ob='';say('Demo account ready. The demo PIN is 1234.');break;
+  case 'ob-signup':{const first=clean(val(f,'first')),last=clean(val(f,'last')),phone=val(f,'phone').trim(),email=val(f,'email').trim(),pw=val(f,'pw');
+    if(!first||!last)return say('Enter your first and last name.',1);
+    if(!/^0\d{10}$/.test(phone))return say('Enter an 11-digit phone number starting with 0.',1);
+    if(!/^\S+@\S+\.\S+$/.test(email))return say('Enter a valid email address.',1);
+    if(pw.length<8||!/\d/.test(pw))return say('Use a password of at least 8 characters with a number.',1);
+    const rc=val(f,'rcode').trim().toUpperCase();if(rc&&!/^[A-Z]{3}\d{3}$/.test(rc))return say('A referral code looks like ADA567. Leave it empty if you do not have one.',1);
+    S.reg={first,last,phone,email,pw,rc,bvn:false,nin:false};S.ob='otp';break}
+  case 'ob-otp':if(val(f,'code').trim()!=='123456')return say('That code is wrong. The demo code is 123456.',1);S.ob='bvn';break;
+  case 'ob-bvn':{const d=val(f,'dob');if(!/^\d{11}$/.test(val(f,'bvn').trim()))return say('A BVN has 11 digits.',1);if(!d||(Date.now()-new Date(d))/31557600000<18)return say('Enter your date of birth. You must be 18 or older.',1);const u=S.upg?S.user:S.reg;u.bvn=true;if(S.upg)u.tier=tierOf(u);S.ob='nin';say('BVN verified.');break}
+  case 'ob-nin':{if(!/^\d{11}$/.test(val(f,'nin').trim()))return say('A NIN has 11 digits.',1);const u=S.upg?S.user:S.reg;u.nin=true;if(S.upg){u.tier=tierOf(u);S.ob='';S.upg=false;say('Upgraded to Tier '+u.tier+'. Your daily limit is now '+N(LIM[u.tier])+'.')}else{S.ob='pin';say('NIN verified.')}break}
+  case 'ob-skip':if(S.upg){S.ob='';S.upg=false}else S.ob='pin';break;
+  case 'ob-pin':{const p=val(f,'pin'),q=val(f,'pin2');if(!/^\d{4}$/.test(p))return say('Your PIN must be 4 digits.',1);if(p!==q)return say('The two PINs do not match.',1);const r=S.reg;S.user={first:r.first,name:r.first+' '+r.last,phone:r.phone,acct:r.phone.slice(1),bvn:r.bvn,nin:r.nin,tier:tierOf(r),pin:p,pw:r.pw};if(r.rc){S.pts+=200;S.refUsed=true}S.ob='done';break}
+  case 'ob-finish':S.ob='';break;
+  case 'ob-login':{const u=S.user;if(!u||u.phone!==val(f,'phone').trim()||u.pw!==val(f,'pw'))return say('No account matches those details. Create an account first.',1);S.ob='';say('Welcome back, '+u.first+'.');break}
+  case 'logout':S.ob='welcome';S.tab='home';break;
+  case 'upg':S.upg=true;S.ob=S.user.bvn?'nin':'bvn';break;
+  case 'mv':S.mv=id;break;
+  case 'dep':{const a=a0();if(!(a>=100))return say('The smallest deposit is ₦100.',1);get('un').bal+=a;L('<b>+'+N(a)+'</b> deposited into '+nm('un'));say(N(a)+' added to Unallocated.');break}
+  case 'redeem':{const k2=Math.floor(S.pts/100);if(!k2)return say('You need at least 100 points.',1);S.pts-=k2*100;get('un').bal+=k2*50;S.rev.rw+=k2*50;L('Redeemed <b>'+k2*100+'</b> points for '+N(k2*50)+' in '+nm('un'));say('Redeemed '+N(k2*50)+'.');break}
+  case 'pin-set':{const u=S.user;if(val(f,'old')!==u.pin)return say('Your current PIN is wrong.',1);if(!/^\d{4}$/.test(val(f,'nw')))return say('The new PIN must be 4 digits.',1);u.pin=val(f,'nw');say('PIN changed.');break}
+  case 'lim-set':{const raw=val(f,'lim').trim();if(!raw){S.ulim=null;return say('Limit reset to your tier limit.')}const v=Math.round(+raw);if(!(v>=1000))return say('Set a limit of at least ₦1,000.',1);S.ulim=v;say('Your daily limit is now '+N(Math.min(v,LIM[S.user.tier]))+'.');break}
+  case 'pref-new':{const n=clean(val(f,'pn')),kd=val(f,'pk'),ids=[...f.querySelectorAll('[name="pb"]')].filter(x=>x.checked).map(x=>x.value);if(!n)return say('Give the preference a name.',1);if(!ids.length)return say('Tick at least one budget.',1);S.prefs.push({id:++S.seq,n,for:kd,ids});say('Preference created. You can now choose it when saving.');break}
+  case 'pup':case 'pdn':{const[pid,bid]=id.split(':'),p=S.prefs.find(x=>x.id===+pid);if(!p)break;const i=p.ids.indexOf(bid),j=i+(k==='pup'?-1:1);if(j>=0&&j<p.ids.length)[p.ids[i],p.ids[j]]=[p.ids[j],p.ids[i]];break}
+  case 'pdel':{S.prefs=S.prefs.filter(x=>x.id!==+id);S.sched.forEach(x=>{if(x.src==='pref:'+id)x.src='prio'});Object.keys(S.dsrc).forEach(k2=>{if(S.dsrc[k2]==='pref:'+id)S.dsrc[k2]='prio'});say('Preference deleted. Auto-saves that used it now use your budget priority.');break}
+  case 'cv':S.cv=id;S.reveal=0;S.ask='';break;
+  case 'c-show':{const c=S.cards.find(x=>x.id===+id);if(!c)break;if(val(f,'pin')!==S.user.pin)return say('Wrong PIN.',1);S.reveal=c.id;break}
+  case 'c-freeze':{const c=S.cards.find(x=>x.id===+id);if(c){c.frozen=!c.frozen;say(c.frozen?'Card frozen. Payments will be declined.':'Card unfrozen.')}break}
+  case 'c-lim':{const c=S.cards.find(x=>x.id===+id),raw=val(f,'lim').trim();if(!c)break;if(!raw){c.limit=null;return say('Limit removed.')}const v=Math.round(+raw);if(!(v>=1000))return say('Set a limit of at least ₦1,000.',1);c.limit=v;say('Daily limit set to '+N(v)+'.');break}
+  case 'c-bind':{const c=S.cards.find(x=>x.id===+id);if(c){c.bind=val(f,'bind');say(c.bind?'This card now spends only from '+get(c.bind).n+'.':'This card now follows your budget rules.')}break}
+  case 'c-del':{const c=S.cards.find(x=>x.id===+id);if(!c)break;S.cards=S.cards.filter(x=>x!==c);S.cv='';S.ask='';L('Card ending '+c.num.slice(-4)+' '+(c.type==='virtual'?'deleted':'blocked'));say('Card removed.');break}
+  case 'c-deliver':{const c=S.cards.find(x=>x.id===+id);if(c){c.status='active';say('Your card has arrived and is active.')}break}
+  case 'c-newv':{const n=clean(val(f,'n'))||'Virtual card',bind=val(f,'bind'),raw=val(f,'lim').trim(),lim=raw?Math.round(+raw):null;if(raw&&!(lim>=1000))return say('Set a limit of at least ₦1,000.',1);const r=spend(VFEE,'',null);if(!r.ok)return say('Not enough money for the '+N(VFEE)+' card fee.',1);S.rev.card+=VFEE;const c=mkCard('virtual',n,bind,lim);S.cards.push(c);L('Created virtual card <b>'+esc(n)+'</b> (fee '+N(VFEE)+')');S.cv='c:'+c.id;say('Virtual card created.');break}
+  case 'c-newp':{const addr=val(f,'addr').trim();if(addr.length<5)return say('Enter your delivery address.',1);if(S.cards.some(x=>x.type==='physical'))return say('You already have a physical card.',1);const r=spend(PFEE,'',null);if(!r.ok)return say('Not enough money for the '+N(PFEE)+' delivery fee.',1);S.rev.card+=PFEE;const c=mkCard('physical',S.user.name.toUpperCase(),'',null);c.status='requested';S.cards.push(c);L('Physical card requested for '+esc(val(f,'city'))+' (fee '+N(PFEE)+')');S.cv='c:'+c.id;say('Card requested. It is on its way.');break}
+  case 'sas-save':{const c=S.sas;c.on=!!(f.querySelector('[name="on"]')||{}).checked;c.pick=val(f,'pick');c.to=val(f,'to');c.src=val(f,'src');say(c.on?'Spend & Save is on.':'Spend & Save is off.');break}
+  case 'copy':{try{navigator.clipboard.writeText(id);say('Code copied.')}catch(x){say('Select the code above and copy it.')}break}
+  case 'ref-sim':{S.refc++;S.pts+=500;S.myv.push({code:'REF'+(100+S.refc*7),txt:'Referral reward',kind:'cash',v:200});L('👥 A friend joined with your referral code: +500 points and a ₦200 voucher');say('A friend joined with your code: +500 points and a ₦200 voucher.');break}
+  case 'ref-use':{const c=val(f,'rcode').trim().toUpperCase();if(!/^[A-Z]{3}\d{3}$/.test(c))return say('A referral code looks like ADA567.',1);if(c===refCode(S.user))return say('You cannot use your own code.',1);S.refUsed=true;S.pts+=200;L('👥 Referral code '+esc(c)+' accepted: +200 points');say('Code accepted: +200 points.');break}
+  case 'v-use':{const v=S.myv[+id];if(!v)break;S.myv.splice(+id,1);applyV(v);say('Voucher redeemed.');break}
+  case 'v-code':{const c=val(f,'vc').trim().toUpperCase(),i=S.myv.findIndex(x=>x.code===c);if(i>=0){const v=S.myv.splice(i,1)[0];applyV(v);return say('Voucher redeemed.')}const d=VCODES[c];if(!d||S.vused.includes(c))return say(d?'That code has already been used.':'That voucher code is not valid.',1);S.vused.push(c);applyV(Object.assign({code:c},d));say('Voucher redeemed.');break}
+  case 'us-send':ussdIn(val(f,'us'));break;
+  case 'us-cancel':S.us={st:'idle',t:'',d:{},tries:0};break;
+  case 'txo':S.tab='me';S.mv='txd';S.tid=+id;break;
+  case 'tf':S.tf=id;break;
+  case 'restart':try{location.reload()}catch(x){say('Reload the page to restart.')}break;
+  case 'tx-re':{const t=S.txs.find(x=>x.id===+fid);if(!t)break;const fr=val(f,'rf'),to=val(f,'rt'),a=a0(),kk=t.takes.find(x=>x.id===fr),B=get(fr),C=get(to);
+    if(!kk||!B||!C)return say('Pick two budgets.',1);if(fr===to)return say('Pick a different budget to charge it to.',1);if(!(a>0))return say('Enter an amount above ₦0.',1);if(a>kk.amt)return say('Only '+N(kk.amt)+' of this payment came from '+B.n+'.',1);if(a>C.bal)return say(C.n+' has only '+N(C.bal)+'.',1);
+    B.bal+=a;C.bal-=a;kk.amt-=a;if(kk.amt<=0)t.takes=t.takes.filter(x=>x!==kk);const k2=t.takes.find(x=>x.id===to);if(k2)k2.amt+=a;else t.takes.push({id:to,amt:a});
+    (t.moves=t.moves||[]).unshift({d:S.day,t:'Moved '+N(a)+' from '+nm(fr)+' to '+nm(to)});
+    L('↔️ Reallocated <b>'+N(a)+'</b> of '+esc(t.title)+' from '+nm(fr)+' to '+nm(to),0,t.id);say('Done. '+N(a)+' now comes from '+C.n+'.');break}
+  case 'view':{const p=S.pend.find(x=>x.id===+id);if(p)p.open=!p.open;break}
+  case 'dis':S.pend=S.pend.filter(x=>x.id!==+id);L('Kept the incoming money in '+nm('un')+' to reallocate yourself');break;
+  case 'acc':{const p=S.pend.find(x=>x.id===+id);if(!p)break;const un=get('un');if(un.bal<p.amt)return say('Not enough Unallocated money is left to apply this split. Move money back into Unallocated first.',1);un.bal-=p.amt;p.split.forEach(x=>{mk(x.n,x.ic).bal+=x.amt});S.pend=S.pend.filter(y=>y!==p);L('Applied the split from '+esc(p.from)+': '+p.split.map(x=>x.ic+' '+esc(x.n)+' '+N(x.amt)).join(', '));say('Allocation applied.');break}
+  case 'prot':{const b=get(id);b.locked=!b.locked;break}
+  case 'up':case 'dn':{const i=S.order.indexOf(id),j=i+(k==='up'?-1:1);if(j>=0&&j<S.order.length)[S.order[i],S.order[j]]=[S.order[j],S.order[i]];break}
+  case 'move':{const fr=get(val(f,'from')),to=get(val(f,'to')),a=a0();if(fr===to)return say('Pick two different budgets.',1);if(!(a>0))return say('Enter an amount above ₦0.',1);if(a>fr.bal)return say(fr.n+' has only '+N(fr.bal)+'.',1);fr.bal-=a;to.bal+=a;L('Moved <b>'+N(a)+'</b> from '+nm(fr.id)+' to '+nm(to.id));say('Moved '+N(a)+'.');break}
+  case 'newb':{const n=clean(val(f,'n'));if(!n)return say('Type a name for the budget.',1);if(S.b.some(b=>b.n.toLowerCase()===n.toLowerCase()))return say('You already have a budget called '+n+'.',1);mk(n);L('Created budget <b>'+n+'</b>');say('Created '+n+'. Use Move money to fill it.');break}
+  case 'cadd':{const n=clean(val(f,'cn'));if(n&&!SR.some(r=>r.n.toLowerCase()===n.toLowerCase()))SR.push({n,ic:'📌',amt:0});break}
+  case 'send':{
+    const un=get('un'),from=val(f,'sender').trim()||'Sender';
+    if(!S.feat){const a=a0();if(!(a>0))return say('Enter an amount above ₦0.',1);un.bal+=a;L('<b>+'+N(a)+'</b> from '+esc(from)+' arrived in '+nm('un')+' (their bank has no budgets)');say('Money arrived in Unallocated.');break}
+    const sp=SR.filter(r=>r.amt>0).map(r=>({n:r.n,ic:r.ic,amt:Math.round(r.amt)}));
+    if(!sp.length)return say('Enter an amount for at least one budget.',1);
+    const amt=sp.reduce((a,x)=>a+x.amt,0);un.bal+=amt;S.pend.push({id:++S.seq,from,amt,split:sp});
+    L('<b>+'+N(amt)+'</b> from '+esc(from)+' arrived in '+nm('un')+' with a suggested split');
+    say('Money arrived in Unallocated. Open Home to view the sender allocation.');break}
+  case 'pos':{
+    const m=MERCH[+val(f,'m')],amt=a0();if(!(amt>0))return say('Enter an amount above ₦0.',1);
+    const c=S.cards.find(x=>x.id===+val(f,'card'));
+    if(c&&c.frozen){S.pos='<div class="card" style="margin-top:10px"><b class="bad">Declined.</b> This card is frozen.</div>';L('Declined '+N(amt)+' at '+m[0]+': card frozen',1);break}
+    if(c){if(c.day!==S.day){c.day=S.day;c.spent=0}if(c.limit&&c.spent+amt>c.limit){S.pos='<div class="card" style="margin-top:10px"><b class="bad">Declined.</b> Over this card daily limit of '+N(c.limit)+'.</div>';L('Declined '+N(amt)+' at '+m[0]+': card limit',1);break}}
+    const bound=c&&c.bind&&get(c.bind)?c.bind:'';
+    const p=bound||(S.mode==='auto'?m[1]:S.mode==='active'?S.active:''),r=spend(amt,p,bound?[bound]:null);
+    if(r.ok&&c)c.spent+=amt;
+    S.pos=r.ok?'<div class="card ok" style="margin-top:10px"><b>Approved '+N(amt)+'</b> at '+m[0]+bar(r.takes)+'<div class="sub">'+split(r.takes)+'</div></div>':'<div class="card" style="margin-top:10px"><b class="bad">Declined.</b> Short by '+N(r.short)+'. Nothing was deducted.</div>';
+    if(r.ok&&m[1])S.rev.pos+=amt*0.005;
+    if(r.ok)spendSave(amt);
+    r.ok?L('<b>'+N(amt)+'</b> at '+m[0]+' paid from '+split(r.takes),0,TX('Card payment: '+m[0],amt,r.takes,'card')):L('Declined '+N(amt)+' at '+m[0],1);break}
+  }
+}
+
+const pendCard=p=>'<div class="card inc"><b>Incoming '+N(p.amt)+'</b> from '+esc(p.from)+'<div class="sub">'+(p.open?p.split.map(x=>x.ic+' '+esc(x.n)+' '+N(x.amt)).join(' · ')+'<div class="seg">'+p.split.map((x,i)=>'<i style="flex:'+x.amt+';background:'+PAL[i%7]+'"></i>').join('')+'</div>':'It is in Unallocated. The sender split it across budgets. View it to decide.')+'</div><div class="row"><button class="mini" data-act="view" data-id="'+p.id+'">'+(p.open?'Hide sender allocation':'View sender allocation')+'</button>'+(p.open?'<button class="mini pri" data-act="acc" data-id="'+p.id+'">Accept this allocation</button>':'')+'<button class="mini" data-act="dis" data-id="'+p.id+'">Reallocate myself</button></div></div>';
+
+function vHome(){
+  const sp=S.b.reduce((a,b)=>a+b.bal,0),sv=S.piggy+S.goals.reduce((a,g)=>a+g.s+g.i,0)+S.locks.reduce((a,l)=>a+l.amt,0),u=S.user;
+  const G=[['pay:tx','💸','Transfer'],['pay:add','➕','Add money'],['pay:airtime','📞','Airtime'],['pay:data','📶','Data'],['pay:tv','📺','TV'],['pay:elec','💡','Electricity'],['pay:betting','🎲','Betting'],['save:sas','💸','Spend & Save'],['me:ussd','📟','USSD'],['me:pts','🎁','Rewards'],['me:tx','🧾','History'],['me','⚙️','More']];
+  return '<div class="hero"><div class="sub">Total balance <button class="mini" data-act="hide" style="color:inherit;border-color:currentColor">'+(S.hide?'Show':'Hide')+'</button></div><div class="big">'+eye(sp+sv)+'</div><div class="sub">Spendable '+eye(sp)+' · Savings '+eye(sv)+'</div></div>'+
+    '<div class="actions"><button class="btn" data-act="go" data-id="pay:add">Add money</button><button class="btn alt" data-act="go" data-id="pay:tx">Transfer</button></div>'+
+    '<div class="quick g4">'+G.map(([id,ic,n])=>'<button data-act="go" data-id="'+id+'"><span>'+ic+'</span>'+n+'</button>').join('')+'</div>'+
+    (u&&u.tier<3?'<div class="card"><div class="sub">Tier '+u.tier+' account. Verify '+(u.bvn?'your NIN':'your BVN and NIN')+' to raise your daily limit from '+N(LIM[u.tier])+' to '+N(LIM[3])+'. <button class="mini" data-act="upg">Verify now</button></div></div>':'')+
+    S.pend.map(pendCard).join('')+
+    '<h2>Your budgets</h2><div class="card">'+S.order.map(id=>{const b=get(id);return '<div class="ln"><span style="color:'+b.c+'">●</span>'+b.ic+' '+esc(b.n)+'<b>'+eye(b.bal)+'</b></div>'}).join('')+'</div>'+
+    '<h2>Recent activity <button class="mini" data-act="go" data-id="me:tx">See all</button></h2><div class="card">'+(S.log.length?S.log.slice(0,6).map(x=>logRow(x)).join(''):'<div class="sub">Nothing yet. Try paying a bill.</div>')+'</div>';
+}
+function form(k){
+  const bet=k==='betting';
+  const from='<label>Pay from<select name="from"><option value="auto">Automatic (my budget rules)</option>'+srcOpt('',bet?betIds():null)+'</select></label>';
+  const T={
+    airtime:sel('net','Network',NET)+inp('phone','Phone number','0803…','inputmode="numeric" maxlength="11"')+inp('amt','Amount (₦)','500','type="number" min="50" inputmode="numeric"'),
+    data:sel('net','Network',NET)+inp('phone','Phone number','0803…','inputmode="numeric" maxlength="11"')+'<label>Data plan<select name="plan">'+PLANS.map((p,i)=>'<option value="'+i+'">'+p[0]+' – '+N(p[1])+'</option>').join('')+'</select></label>',
+    betting:sel('bet','Betting company',BETS)+inp('cid','Account ID','Your betting account ID','maxlength="20"')+inp('amt','Amount (₦)','1000','type="number" min="100" inputmode="numeric"')+'<p class="sub">Betting can only be paid from a Betting budget or Unallocated, never from Food, School or Electricity. Create a Betting budget in Budgets to set your own limit.</p>',
+    tv:sel('prov','TV company',['DStv','GOtv','StarTimes'])+inp('card','Smartcard / IUC number','10 digits','inputmode="numeric" maxlength="10"')+'<label>Package<select name="pack">'+PACKS.map((p,i)=>'<option value="'+i+'">'+p[0]+' – '+N(p[1])+'</option>').join('')+'</select></label>',
+    elec:sel('disco','Electricity company',DISCO)+sel('mt','Meter type',['Prepaid','Postpaid'])+inp('meter','Meter number','11 to 13 digits','inputmode="numeric" maxlength="13"')+inp('amt','Amount (₦)','2000','type="number" min="500" inputmode="numeric"')
+  };
+  return '<div class="card frm" data-k="'+k+'">'+T[k]+from+'<button class="btn" data-act="pay">Pay now</button><p class="sub">Simulated. No real money or tokens.</p></div>';
+}
+const quick=()=>{const u=S.user;return '<div class="quick">'+[['pay:tx','💸','Send'],['pay:airtime','📞','Airtime'],['pay:elec','💡','Light'],['save','🐷','Save'],['bud','🧮','Budgets']].map(([id,ic,n])=>'<button data-act="go" data-id="'+id+'"><span>'+ic+'</span>'+n+'</button>').join('')+'</div>'+(u?'<div class="card"><div class="ln">Account '+esc(u.acct)+'<b>PurposePay · Tier '+u.tier+'</b></div>'+(u.tier<3?'<div class="sub">Verify '+(u.bvn?'your NIN':'your BVN and NIN')+' to raise your daily limit from '+N(LIM[u.tier])+' to '+N(LIM[3])+'. <button class="mini" data-act="upg">Verify now</button></div>':'')+'</div>':'')};
+function vOb(){
+  const st=S.ob,i2=(n,l,ph,x)=>inp(n,l,ph,x||''),back='<div class="row"><button class="mini" data-act="ob-go" data-id="welcome">Back</button></div>';
+  const note=DEMO?'<p class="sub">Demo only. Do not enter your real BVN, NIN or password. Nothing leaves this page.</p>':'';
+  if(st==='welcome')return '<div class="hero"><div class="big">PurposePay</div><div class="sub">One account. Budgets that follow your money. Savings that pay interest every day.</div></div><div class="card"><button class="btn" data-act="ob-go" data-id="signup">Create account</button><button class="btn alt" data-act="ob-go" data-id="login">Log in</button>'+(DEMO?'<div class="row"><button class="mini" data-act="ob-demo">Skip to the demo</button></div>':'')+'</div>'+note;
+  if(st==='signup')return '<h2>Create your account</h2><div class="card frm">'+i2('first','First name','Ada','maxlength="20" autocomplete="given-name"')+i2('last','Last name','Obi','maxlength="20" autocomplete="family-name"')+i2('phone','Phone number','0803…','inputmode="numeric" maxlength="11" autocomplete="tel"')+i2('email','Email','you@example.com','type="email" autocomplete="email"')+i2('pw','Password','8+ characters with a number','type="password" autocomplete="new-password"')+i2('rcode','Referral code (optional)','e.g. TUN482','maxlength="6"')+'<button class="btn" data-act="ob-signup">Continue</button>'+back+'</div>'+note;
+  if(st==='otp')return '<h2>Confirm your phone</h2><div class="card frm"><p class="sub">We sent a 6-digit code to '+esc(S.reg.phone)+'.'+(DEMO?' Demo code: <b>123456</b>':'')+'</p>'+i2('code','Code','6 digits','inputmode="numeric" maxlength="6" autocomplete="one-time-code"')+'<button class="btn" data-act="ob-otp">Verify</button></div>';
+  if(st==='bvn')return '<h2>Verify your identity</h2><div class="card frm"><p class="sub">Your 11-digit BVN confirms who you are and raises your limits.</p>'+i2('bvn','BVN','11 digits','inputmode="numeric" maxlength="11"')+i2('dob','Date of birth','','type="date"')+'<button class="btn" data-act="ob-bvn">Verify BVN</button><div class="row"><button class="mini" data-act="ob-skip">Skip for now (Tier 1)</button></div></div>'+note;
+  if(st==='nin')return '<h2>Add your NIN</h2><div class="card frm"><p class="sub">Your 11-digit NIN unlocks the highest limits.</p>'+i2('nin','NIN','11 digits','inputmode="numeric" maxlength="11"')+'<button class="btn" data-act="ob-nin">Verify NIN</button><div class="row"><button class="mini" data-act="ob-skip">Skip for now</button></div></div>'+note;
+  if(st==='pin')return '<h2>Create your PIN</h2><div class="card frm"><p class="sub">You will use this 4-digit PIN to approve transfers.</p>'+i2('pin','PIN','4 digits','type="password" inputmode="numeric" maxlength="4"')+i2('pin2','Confirm PIN','4 digits','type="password" inputmode="numeric" maxlength="4"')+'<button class="btn" data-act="ob-pin">Create account</button></div>';
+  if(st==='login')return '<h2>Log in</h2><div class="card frm">'+i2('phone','Phone number','0803…','inputmode="numeric" maxlength="11"')+i2('pw','Password','','type="password"')+'<button class="btn" data-act="ob-login">Log in</button>'+back+'</div>';
+  const u=S.user;
+  return '<div class="hero"><div class="sub">Account created</div><div class="big">Welcome, '+esc(u.first)+'</div><div class="sub">Account number '+esc(u.acct)+' · PurposePay · Tier '+u.tier+'</div></div><div class="card"><div class="ln">Daily transfer limit<b>'+N(LIM[u.tier])+'</b></div><div class="ln">BVN<b>'+(u.bvn?'Verified':'Not yet')+'</b></div><div class="ln">NIN<b>'+(u.nin?'Verified':'Not yet')+'</b></div>'+(DEMO?'<p class="sub">We added demo money so you can try everything. Limits are demo values.</p>':'')+'<button class="btn" data-act="ob-finish">Open my account</button></div>';
+}
+function doSend(f){
+  const e=S.enq,v=n=>val(f,n).trim(),alloc=e.pp&&S.tfeat,u=S.user||{tier:3,name:'Sender'};
+  const sp=TR.filter(r=>r.amt>0).map(r=>({n:r.n,ic:r.ic,amt:Math.round(r.amt)}));
+  const amt=alloc?sp.reduce((a,x)=>a+x.amt,0):Math.round(+v('amt'));
+  if(!(amt>0))return say(alloc?'Enter an amount for at least one budget.':'Enter an amount above ₦0.',1);
+  if(S.sent.d!==S.day)S.sent={d:S.day,a:0};
+  if(S.sent.a+amt>limOf(u))return say('That is over your daily transfer limit of '+N(limOf(u))+' (Tier '+u.tier+'). You have '+N(Math.max(0,limOf(u)-S.sent.a))+' left today. Verify more details to raise it.',1);
+  if(!/^\d{4}$/.test(v('pin')))return say('Enter your 4-digit PIN.',1);
+  if(u.pin&&v('pin')!==u.pin)return say('Wrong PIN. Try again.',1);
+  const from=v('from'),r=spend(amt,from==='auto'?'':from,null);
+  if(!r.ok)return say('Not enough money in your budgets. Short by '+N(r.short)+'.',1);
+  S.sent.a+=amt;
+  S.rc={title:'Money sent',lines:[N(amt)+' to '+esc(e.name),esc(e.bank)+' · '+esc(e.acct)].concat(alloc?['With your allocation: '+sp.map(x=>x.ic+' '+esc(x.n)+' '+N(x.amt)).join(', ')]:[]),takes:r.takes,token:''};
+  S.lastSend=alloc?{from:u.name,amt,split:sp}:null;
+  L('<b>'+N(amt)+'</b> sent to '+esc(e.name)+(alloc?' with a budget allocation':'')+', paid from '+split(r.takes),0,TX('Sent to '+e.name,amt,r.takes,'send'));
+  spendSave(amt);
+}
+function vTx(){
+  const e=S.enq,u=S.user||{tier:3};
+  if(!e)return '<div class="card frm"><label>Recipient bank<select name="bank">'+BANKS.map(b=>'<option>'+b+'</option>').join('')+'</select></label>'+inp('acct','Account number','10 digits','inputmode="numeric" maxlength="10"')+'<button class="btn" data-act="enq">Check account</button><p class="sub">The name check is simulated. Choose PurposePay to send with budgets.</p></div>';
+  const alloc=e.pp&&S.tfeat,left=Math.max(0,limOf(u)-(S.sent.d===S.day?S.sent.a:0));
+  return '<div class="card frm" data-k="tx"><div class="ln">'+esc(e.name)+'<b>'+esc(e.bank)+' · '+esc(e.acct)+'</b></div><div class="row"><button class="mini" data-act="enq-no">Change recipient</button></div>'+
+    (e.pp?'<label style="flex-direction:row;align-items:center;gap:8px;color:var(--ink);font-size:13px;margin-top:8px"><input type="checkbox" data-tfeat style="width:auto"'+(S.tfeat?' checked':'')+'> Send with my budget allocation (their bank supports budgets)</label>':'<p class="sub">Their bank does not support budgets, so the money arrives as a normal transfer.</p>')+
+    (alloc?TR.map((r,i)=>'<label>'+r.ic+' '+esc(r.n)+'<input type="number" min="0" step="100" data-tr="'+i+'" value="'+r.amt+'"></label>').join('')+'<div class="r2" style="grid-template-columns:1fr auto"><input name="tn" maxlength="24" placeholder="Add a budget, e.g. Rent" aria-label="Custom budget name"><button class="mini" data-act="tadd">Add</button></div><div class="ln">Total to send<b id="ttot">'+N(TR.reduce((a,r)=>a+(r.amt||0),0))+'</b></div>':inp('amt','Amount (₦)','1000','type="number" min="1" inputmode="numeric"'))+
+    '<label>Pay from<select name="from"><option value="auto">Automatic (my budget rules)</option>'+srcOpt()+'</select></label>'+inp('pin','PIN','4 digits'+(u.phone==='08000000000'?' (demo PIN 1234)':''),'type="password" inputmode="numeric" maxlength="4"')+
+    '<button class="btn" data-act="pay">Send</button><p class="sub">Tier '+u.tier+' daily limit '+N(limOf(u))+', '+N(left)+' left today. Demo values.</p></div>';
+}
+function vPay(){
+  const bk='<button class="mini" data-act="go" data-id="home">‹ Home</button>';
+  if(S.rc){const r=S.rc;return bk+'<h2>'+r.title+'</h2><div class="card ok">'+r.lines.map(l=>'<div class="ln">'+l+'</div>').join('')+bar(r.takes)+'<div class="sub">Paid from '+split(r.takes)+'</div>'+(r.token?'<div class="tok">Demo token: '+r.token+'</div>':'')+'<button class="btn" data-act="done">Done</button></div>'}
+  const T={tx:'Transfer',add:'Add money',airtime:'Airtime',data:'Data',tv:'TV subscription',elec:'Electricity',betting:'Betting'};
+  return bk+'<h2>'+(T[S.svc]||'Pay')+'</h2>'+(S.svc==='tx'?vTx():S.svc==='add'?vAdd():S.svc?form(S.svc):'<p class="sub">Choose a service from Home.</p>');
+}
+const frmAmt=(act,id,btn)=>'<div class="frm r2" data-id="'+id+'"><input name="amt" type="number" min="1" placeholder="₦" inputmode="numeric" aria-label="Amount"><select name="src" aria-label="Take from">'+srcOpt()+'</select><button class="mini pri" data-act="'+act+'">'+btn+'</button></div>';
+function brkCalc(early,s,i){
+  if(!early)return{pay:s+i,fee:0,forfeit:0,free:false};
+  if(S.free>0)return{pay:s+i,fee:0,forfeit:0,free:true};
+  const fee=Math.round(s*PEN);return{pay:s-fee,fee,forfeit:i,free:false};
+}
+const brkNote=c=>c.free?'Free early break: no fee and you keep your interest. '+(S.free-1)+' free break'+(S.free-1===1?'':'s')+' left after this.':(c.fee||c.forfeit)?'No free breaks left. Fee '+N(c.fee)+' ('+Math.round(PEN*100)+'%) and you lose '+N(c.forfeit)+' interest.':'No penalty.';
+function advance(n){
+  let int=0,auto=0,miss=0,mat=0,piI=0;const gi={},li={};
+  for(let d=0;d<n;d++){
+    S.day++;
+    if(S.day%365===0)S.free=2;
+    const dep=S.piggy+S.goals.reduce((a,g)=>a+g.s+g.i,0)+S.locks.reduce((a,l)=>a+l.amt,0);
+    let paid=Math.min(S.piggy,PCAP)*PIG/100/365;S.piggy+=paid;piI+=paid;
+    S.goals.forEach(g=>{const x=(g.s+g.i)*GOAL/100/365;g.i+=x;paid+=x;gi[g.id]=(gi[g.id]||0)+x});
+    S.locks.forEach(l=>{if(!l.up){const x=l.amt*l.rate/100/365;l.i+=x;paid+=x;li[l.id]=(li[l.id]||0)+x}});
+    S.rev.spread+=dep*BANK/100/365-paid;int+=paid;
+    S.sched.forEach(s=>{
+      if(s.next>S.day)return;
+      const g=s.to==='piggy'?null:S.goals.find(x=>x.id===+s.to),r=(s.to==='piggy'||g)?runSrc(s.src,s.amt):null;
+      if(r&&r.ok){if(g)g.s+=s.amt;else S.piggy+=s.amt;auto+=s.amt;earn(Math.floor(s.amt/100));H(s.to==='piggy'?'piggy':'g'+s.to,'Auto-save + '+N(s.amt)+' from '+srcLabel(s.src))}else{miss++;H(s.to==='piggy'?'piggy':'g'+s.to,'Auto-save skipped: not enough money')}
+      s.next+=s.every;
+    });
+    S.locks=S.locks.filter(l=>{if(S.day<l.end)return true;const tot=l.amt+(l.up?0:l.i);get('un').bal+=tot;mat+=tot;return false});
+  }
+  if(piI>0)H('piggy','Interest + '+N(piI)+' over '+n+' day'+(n>1?'s':''));
+  Object.entries(gi).forEach(([id,v])=>H('g'+id,'Interest + '+N(v)));
+  Object.entries(li).forEach(([id,v])=>H('l'+id,'Interest + '+N(v)));
+  L('⏩ '+n+' day'+(n>1?'s':'')+' passed. Today is '+dayStr(S.day)+'. Interest earned: <b>'+N(int)+'</b>'+(auto?' · Auto-saved '+N(auto):'')+(mat?' · Matured '+N(mat):''));
+  if(miss)L('Auto-save skipped '+miss+' time'+(miss>1?'s':'')+': not enough money in the budget',1);
+  say('Moved forward '+n+' day'+(n>1?'s':'')+'.');
+}
+const clock=()=>'<div class="card"><b>Demo clock</b><div class="sub">Today is '+dayStr(S.day)+'. Interest is added every day, and auto-saves and maturities happen as days pass. Free early breaks left: '+S.free+' of 2.</div><div class="row">'+[1,7,30,90].map(n=>'<button class="mini" data-act="adv" data-id="'+n+'">+'+n+' day'+(n>1?'s':'')+'</button>').join('')+'</div></div>';
+function bankCard(){
+  const r=S.rev,t=r.bills+r.pos+r.spread+r.pen+r.card-r.rw,m=v=>'₦'+v.toLocaleString('en-NG',{minimumFractionDigits:2,maximumFractionDigits:2});
+  const rows=[['Provider commissions (airtime, data, electricity)',r.bills],['Card interchange (POS purchases)',r.pos],['Savings spread (earned minus interest paid out)',r.spread],['Early-break fees and forfeited interest',r.pen],['Card fees (virtual and physical)',r.card],['Rewards, vouchers and referrals paid out (a cost)',-r.rw]];
+  return '<h2>3. Bank dashboard: how the bank earns</h2><div class="card">'+rows.map(([n,v])=>'<div class="ln">'+n+'<b>'+m(v)+'</b></div>').join('')+'<div class="ln"><b style="margin-left:0">Total</b><b>'+m(t)+'</b></div><p class="sub">Customers pay no fees for bills or card payments, and betting earns the bank nothing. Rates are demo assumptions: commissions 1 to 3%, interchange 0.5%, the bank earning '+BANK+'% on savings it holds. Check real rules and rates before relying on them. Move the Demo clock on the Save tab to watch the spread grow.</p></div>';
+}
+const H=(k,t)=>{(S.hist[k]=S.hist[k]||[]).unshift({d:S.day,t});S.hist[k].length=Math.min(S.hist[k].length,15)};
+const eye=v=>S.hide?'₦ ••••••':N(v);
+const histBox=k=>{const a=S.hist[k]||[];return '<h2>History</h2><div class="card">'+(a.length?a.map(x=>'<div class="ln"><span class="sub">'+dayStr(x.d)+'</span>'+x.t+'</div>').join(''):'<div class="sub">No activity yet.</div>')+'</div>'};
+const back=(to,label)=>'<button class="mini" data-act="sv" data-id="'+to+'">‹ '+label+'</button>';
+const chips=()=>'<div class="row">'+[1000,5000,10000,50000].map(v=>'<button class="mini" data-fill="'+v+'">'+N(v)+'</button>').join('')+'</div>';
+const addForm=(act,id,kind)=>'<div class="card frm" data-id="'+id+'"><label>Amount (₦)<input name="amt" type="number" min="1" inputmode="numeric"></label>'+chips()+'<label style="margin-top:8px">Take the money from<select name="src">'+savOpt(kind)+'</select></label><button class="btn" data-act="'+act+'">Save money</button></div>';
+const outForm=act=>'<div class="card frm"><label>Amount (₦)<input name="amt" type="number" min="1" inputmode="numeric"></label>'+chips()+'<p class="sub">The money goes to Unallocated, your account balance.</p><button class="btn" data-act="'+act+'">Withdraw</button></div>';
+const schList=to=>S.sched.filter(s=>s.to===to).map(s=>'<div class="ln">'+N(s.amt)+' from '+srcLabel(s.src)+'<b>every '+EV[s.every]+' at '+s.time+'</b></div><div class="sub">Next: '+dayStr(s.next)+' <button class="mini" data-act="sch-del" data-id="'+s.id+'">Stop</button></div>').join('');
+const schForm=to=>'<div class="frm"><input type="hidden" name="to" value="'+to+'"><label>Take from<select name="src">'+savOpt(to==='piggy'?'piggy':'target')+'</select></label><div class="r2" style="grid-template-columns:1fr 1fr"><label>Amount (₦)<input name="amt" type="number" min="1" inputmode="numeric"></label><label>Every<select name="every"><option value="1">Day</option><option value="7">Week</option><option value="30">Month</option></select></label></div><div class="r2" style="grid-template-columns:1fr 1fr"><label>Starts<input name="start" type="date" value="'+iso(S.day+1)+'" min="'+iso(S.day+1)+'"></label><label>Time<input name="time" type="time" value="09:00"></label></div><button class="btn" data-act="sch-new">Start auto-save</button></div>';
+const autoBox=(to,inner)=>'<details'+(inner?' style="margin-top:8px"':' class="card"')+'><summary><b>⏰ Auto-save</b> <span class="sub">'+S.sched.filter(s=>s.to===to).length+' active</span></summary>'+schList(to)+schForm(to)+'</details>';
+const prod=(id,ic,name,desc,bal,extra)=>'<button class="prodc" data-act="sv" data-id="'+id+'"><span class="pi">'+ic+'</span><span class="pt"><b>'+name+'</b><span class="sub">'+desc+'</span></span><span class="pb"><b>'+eye(bal)+'</b><span class="sub">'+extra+'</span></span></button>';
+const newTarget=()=>'<div class="card frm"><b>New target</b><label>Category<select name="cat">'+Object.keys(CATS).map(c=>'<option>'+c+'</option>').join('')+'</select></label><label>Name (optional)<input name="n" maxlength="24" placeholder="e.g. Laptop"></label><div class="r2" style="grid-template-columns:1fr 1fr"><label>Target (₦)<input name="t" type="number" min="1" inputmode="numeric"></label><label>Reach it by<input name="end" type="date" value="'+iso(S.day+60)+'" min="'+iso(S.day+1)+'"></label></div><button class="btn" data-act="goal-new">Create target</button></div>';
+const lockCard=l=>{
+  const ask=S.ask==='l'+l.id,c=brkCalc(true,l.amt,l.up?0:l.i),pay=Math.max(0,c.pay-(l.up?l.upInt:0)),tot=Math.round(l.amt*l.rate/100*l.mo/12);
+  return '<div class="card"><b>🔒 '+esc(l.n)+'</b> <span class="sub">'+l.mo+' months · '+l.rate+'% a year (demo rate) · matures '+dayStr(l.end)+'</span><div class="ln">Locked<b>'+eye(l.amt)+'</b></div><div class="ln">'+(l.up?'Interest paid up front<b>'+N(l.upInt)+'</b>':'Interest earned so far<b>'+N(l.i)+' of '+N(tot)+'</b>')+'</div>'+(S.hist['l'+l.id]||[]).slice(0,3).map(x=>'<div class="sub">'+dayStr(x.d)+' · '+x.t+'</div>').join('')+
+    (ask?'<div class="sub" style="margin-top:6px">'+brkNote(c)+(l.up?' The '+N(l.upInt)+' paid up front is taken back.':'')+' You get <b>'+N(pay)+'</b>.</div><div class="row"><button class="mini pri" data-act="lock-del" data-id="'+l.id+'">Confirm and break lock</button><button class="mini" data-act="ask-no">Keep it locked</button></div>':'<div class="row"><button class="mini" data-act="ask" data-id="l'+l.id+'">Break lock early</button></div>')+'</div>';
+};
+function vSv(){
+  const sv=S.sv;
+  if(sv==='piggy')return back('','Savings')+'<div class="hero" style="margin-top:8px"><div class="sub">Piggy bank balance</div><div class="big">'+eye(S.piggy)+'</div><div class="sub">'+PIG+'% a year, added every day · earning about '+N(Math.min(S.piggy,PCAP)*PIG/100/365)+' a day · earns interest on up to '+N(PCAP)+'</div></div><div class="actions"><button class="btn" data-act="op" data-id="add">Add money</button><button class="btn alt" data-act="op" data-id="out">Withdraw</button></div>'+(S.open==='add'?addForm('pig-in','','piggy'):S.open==='out'?outForm('pig-out'):'')+autoBox('piggy')+prefBox('piggy')+histBox('piggy');
+  if(sv==='target')return back('','Savings')+'<h2>Target savings</h2>'+(S.goals.length?S.goals.map(g=>{const bal=g.s+g.i;return '<button class="prodc" data-act="sv" data-id="target:'+g.id+'"><span class="pi">'+(g.ic||'🎯')+'</span><span class="pt"><b>'+esc(g.n)+'</b><span class="sub">By '+dayStr(g.end)+'</span><span class="bar"><i style="width:'+Math.min(100,bal/g.t*100)+'%"></i></span></span><span class="pb"><b>'+eye(bal)+'</b><span class="sub">of '+N(g.t)+'</span></span></button>'}).join(''):'<div class="card sub">No targets yet. Create one to start saving towards it.</div>')+'<button class="btn" data-act="sv" data-id="target:new">＋ Create a target</button>'+prefBox('target');
+  if(sv==='target:new')return back('target','Targets')+newTarget();
+  if(sv==='sas'){const c=S.sas;return back('','Savings')+'<div class="hero" style="margin-top:8px"><div class="sub">💸 Spend & Save</div><div class="big">'+eye(c.total)+'</div><div class="sub">saved automatically so far</div></div><div class="card frm"><label class="ck"><input type="checkbox" name="on"'+(c.on?' checked':'')+'> Turn on Spend & Save</label><label>How much<select name="pick">'+[['pct:2','2% of every payment'],['pct:5','5% of every payment'],['pct:10','10% of every payment'],['round:100','Round up to the next ₦100'],['round:500','Round up to the next ₦500'],['round:1000','Round up to the next ₦1,000']].map(([v,t])=>'<option value="'+v+'"'+(c.pick===v?' selected':'')+'>'+t+'</option>').join('')+'</select></label><label>Save into<select name="to"><option value="piggy">🐷 Piggy bank</option>'+S.goals.map(g=>'<option value="'+g.id+'"'+(c.to===String(g.id)?' selected':'')+'>'+(g.ic||'🎯')+' '+esc(g.n)+'</option>').join('')+'</select></label><label>Take the money from<select name="src">'+savOpt('piggy',c.src)+'</select></label><button class="btn" data-act="sas-save">Save settings</button><p class="sub">It applies to bills, transfers, USSD and card payments. The saved amount is taken on top of the payment, from the source you choose.</p></div>'+histBox('piggy')}
+  
+  const mg=/^target:(\d+)$/.exec(sv);
+  if(mg){
+    const g=S.goals.find(x=>x.id===+mg[1]);if(!g){S.sv='target';return vSv()}
+    const bal=g.s+g.i,ask=S.ask==='g'+g.id,c=brkCalc(S.day<g.end&&bal<g.t,g.s,g.i);
+    return back('target','Targets')+'<div class="hero" style="margin-top:8px"><div class="sub">'+(g.ic||'🎯')+' '+esc(g.n)+'</div><div class="big">'+eye(bal)+'</div><div class="sub">of '+N(g.t)+(bal>=g.t?' · Goal reached 🎉':'')+' · by '+dayStr(g.end)+'</div><div class="bar"><i style="width:'+Math.min(100,bal/g.t*100)+'%"></i></div><div class="sub">Interest earned '+N(g.i)+' ('+GOAL+'% a year, added every day)</div></div><div class="actions"><button class="btn" data-act="op" data-id="add">Add money</button><button class="btn alt" data-act="ask" data-id="g'+g.id+'">Withdraw all</button></div>'+
+      (S.open==='add'?addForm('goal-in',g.id,'target'):'')+(ask?'<div class="card"><div class="sub">'+brkNote(c)+' You get <b>'+N(c.pay)+'</b>. This closes the target.</div><div class="row"><button class="mini pri" data-act="goal-del" data-id="'+g.id+'">Confirm and close target</button><button class="mini" data-act="ask-no">Keep saving</button></div></div>':'')+autoBox(String(g.id))+prefBox('target')+histBox('g'+g.id);
+  }
+  if(sv==='long')return back('','Savings')+'<h2>Long-term savings</h2>'+(S.locks.length?S.locks.map(lockCard).join(''):'<div class="card sub">Nothing locked yet. Lock money for a fixed time to earn more interest.</div>')+'<button class="btn" data-act="sv" data-id="long:new">＋ Lock money</button>'+prefBox('long');
+  if(sv==='long:new')return back('long','Long-term')+'<div class="card frm" data-lf="1"><b>New long-term lock</b><label>Name<input name="n" maxlength="24" placeholder="e.g. Emergency fund"></label><div class="r2" style="grid-template-columns:1fr 1fr"><label>Amount (₦)<input name="amt" type="number" min="1" inputmode="numeric"></label><label>Lock for<select name="mo"><option value="3">3 months (from 8%)</option><option value="6">6 months (from 10%)</option><option value="12">12 months (from 12%)</option></select></label></div><label>Interest paid<select name="pay"><option value="end">After maturity (earned daily)</option><option value="up">Up front (now)</option></select></label><label>Take the money from<select name="src">'+savOpt('long')+'</select></label><div class="ln">Your rate<b id="lrate">'+lockRate(3,0)+'% a year</b></div><p class="sub">The rate depends on how long and how much: +1% from ₦100,000, +2% from ₦500,000 and +3% from ₦1,000,000. It is capped at '+CAP+'% a year.</p><button class="btn" data-act="lock-new">Lock money</button><p class="sub">Breaking a lock early uses a free break, or costs a fee. Rates are made up for this demo.</p></div>';
+  const pT=S.piggy,gT=S.goals.reduce((a,g)=>a+g.s+g.i,0),lT=S.locks.reduce((a,l)=>a+l.amt,0);
+  const daily=Math.min(pT,PCAP)*PIG/100/365+S.goals.reduce((a,g)=>a+(g.s+g.i)*GOAL/100/365,0)+S.locks.reduce((a,l)=>a+(l.up?0:l.amt*l.rate/100/365),0);
+  return '<div class="hero"><div class="sub">Total savings <button class="mini" data-act="hide" style="color:inherit;border-color:currentColor">'+(S.hide?'Show':'Hide')+'</button></div><div class="big">'+eye(pT+gT+lT)+'</div><div class="sub">Earning about '+N(daily)+' a day · '+S.sched.length+' auto-save'+(S.sched.length===1?'':'s')+' active</div></div><h2>Your savings</h2>'+
+    prod('piggy','🐷','Piggy bank','Save and withdraw any time',pT,PIG+'% a year')+
+    prod('target','🎯','Target savings','Save towards a goal',gT,S.goals.length+' target'+(S.goals.length===1?'':'s'))+
+    prod('long','🔒','Long-term savings','Lock money to earn more',lT,S.locks.length+' lock'+(S.locks.length===1?'':'s')+' · up to 15%')+
+    prod('sas','💸','Spend & Save',(S.sas.on?'On':'Off')+' · save a little on every payment',S.sas.total,'saved so far');
+}
+function vSave(){return vSv()}
+function vBud(){
+  const o=(v,t)=>'<option value="'+v+'"'+(S.mode===v?' selected':'')+'>'+t+'</option>';
+  return '<h2>Rules for card payments</h2><div class="card"><label>How the budget is chosen<select data-mode>'+o('auto','Automatically by merchant type')+o('active','I pick one in the app')+o('waterfall','Priority order only')+'</select></label>'+(S.mode==='active'?'<label>Active budget<select data-active>'+srcOpt(S.active)+'</select></label>':'')+'</div>'+
+    '<h2>Priority order</h2><p class="sub">Drag ⠿ or use ▲ ▼. Protected budgets never cover others.</p><div id="bl">'+S.order.map((id,i)=>{const b=get(id);return '<div class="bc" data-id="'+id+'" style="--c:'+b.c+'"><span><span class="hd" data-h="1" aria-hidden="true">⠿</span>'+(i+1)+'</span><span><b>'+b.ic+' '+esc(b.n)+'</b></span><b>'+N(b.bal)+'</b><span class="ctl"><button class="mini" data-act="prot" data-id="'+id+'" aria-pressed="'+b.locked+'">'+(b.locked?'Protected':'Can cover others')+'</button><button class="mini" data-act="up" data-id="'+id+'" aria-label="Move up">▲</button><button class="mini" data-act="dn" data-id="'+id+'" aria-label="Move down">▼</button>'+(id==='un'?'':S.ask==='b'+id?'<button class="mini pri" data-act="b-del" data-id="'+id+'">Confirm delete ('+N(b.bal)+' goes to Unallocated)</button><button class="mini" data-act="ask-no">Cancel</button>':'<button class="mini" data-act="b-ask" data-id="'+id+'">Delete</button>')+'</span></div>'}).join('')+'</div>'+
+    '<h2>Move money</h2><div class="card frm"><div class="r2" style="grid-template-columns:1fr 1fr"><label>From<select name="from">'+srcOpt('un')+'</select></label><label>To<select name="to">'+srcOpt('food')+'</select></label></div><label>Amount (₦)<input name="amt" type="number" min="1" inputmode="numeric"></label><button class="btn" data-act="move">Move money</button></div>'+
+    '<h2>Create a budget</h2><div class="card frm"><label>Name<input name="n" maxlength="24" placeholder="e.g. Transport or Betting"></label><button class="btn" data-act="newb">Create budget</button></div>';
+}
+function vDemo(){
+  return '<h2>1. Simulate a sender</h2><div class="card frm"><label>Sender<input name="sender" maxlength="30" value="'+esc(S.from)+'"></label><label style="flex-direction:row;align-items:center;gap:8px;color:var(--ink);font-size:13px"><input type="checkbox" data-feat style="width:auto"'+(S.feat?' checked':'')+'> Sender bank supports budgets</label>'+
+    (S.feat?SR.map((r,i)=>'<label>'+r.ic+' '+esc(r.n)+'<input type="number" min="0" step="100" data-sr="'+i+'" value="'+r.amt+'"></label>').join('')+'<div class="r2" style="grid-template-columns:1fr auto"><input name="cn" maxlength="24" placeholder="Add a budget, e.g. Rent" aria-label="Custom budget name"><button class="mini" data-act="cadd">Add</button></div>':'<label>Amount (₦)<input name="amt" type="number" min="1" value="20000" inputmode="numeric"></label><p class="sub">Their bank has no budgets, so it arrives in Unallocated.</p>')+
+    '<button class="btn" data-act="send">Send money</button></div>'+
+    '<h2>2. Pay at a POS</h2><div class="card frm"><label>Card<select name="card">'+S.cards.filter(c=>c.status==='active').map(c=>'<option value="'+c.id+'">'+(c.type==='virtual'?'Virtual · ':'Debit · ')+esc(c.name)+' ending '+c.num.slice(-4)+'</option>').join('')+'</select></label><label>Merchant<select name="m">'+MERCH.map((m,i)=>'<option value="'+i+'">'+m[0]+'</option>').join('')+'</select></label><label>Amount (₦)<input name="amt" type="number" min="1" value="3000" inputmode="numeric"></label><button class="btn" data-act="pos">Tap card</button>'+S.pos+'</div>'+bankCard();
+}
+const mvBack='<button class="mini" data-act="mv" data-id="">‹ Me</button>';
+const KN={piggy:'Piggy bank',target:'Target savings',long:'Long-term savings'};
+function prefCard(p){return '<div class="card"><b>📋 '+esc(p.n)+'</b>'+(p.ids.length?p.ids.map((id,i)=>{const b=get(id);return b?'<div class="ln">'+(i+1)+'. '+b.ic+' '+esc(b.n)+'<b><button class="mini" data-act="pup" data-id="'+p.id+':'+id+'" aria-label="Move up">▲</button> <button class="mini" data-act="pdn" data-id="'+p.id+':'+id+'" aria-label="Move down">▼</button></b></div>':''}).join(''):'<div class="sub">No budgets in this preference.</div>')+'<div class="row"><button class="mini" data-act="pdel" data-id="'+p.id+'">Delete preference</button></div></div>'}
+const prefForm=k=>'<div class="card frm"><b>New preference</b><label>Name<input name="pn" maxlength="24" placeholder="e.g. Spare cash first"></label><input type="hidden" name="pk" value="'+k+'"><div class="sub">Tick the budgets to take money from. They start in your main priority order, and you can reorder them afterwards.</div>'+S.order.map(id=>{const b=get(id);return '<label class="ck"><input type="checkbox" name="pb" value="'+id+'"> '+b.ic+' '+esc(b.n)+'</label>'}).join('')+'<button class="btn" data-act="pref-new">Create preference</button></div>';
+const prefBox=(k,open)=>'<details'+(open?' open':'')+' class="card"><summary><b>📋 Deduction preferences</b> <span class="sub">'+S.prefs.filter(p=>p.for===k).length+' saved</span></summary><div class="sub">Choose how money is taken for '+KN[k].toLowerCase()+': one budget, your main priority order, or a preference you create here.</div>'+S.prefs.filter(p=>p.for===k).map(prefCard).join('')+prefForm(k)+'</details>';
+const row=(id,ic,t,d)=>'<button class="prodc" data-act="mv" data-id="'+id+'"><span class="pi">'+ic+'</span><span class="pt"><b>'+t+'</b><span class="sub">'+d+'</span></span><span class="pb">›</span></button>';
+function vMe(){
+  const u=S.user,mv=S.mv;
+  
+  if(mv==='ussd')return mvBack+vUssd();
+  if(mv==='txd')return vTxd();
+  if(mv==='tx')return vTxList();
+  if(mv==='pts'){const k2=Math.floor(S.pts/100),code=refCode(u);return mvBack+'<div class="hero" style="margin-top:8px"><div class="sub">Reward points</div><div class="big">'+S.pts+'</div><div class="sub">Earn 1 point for every ₦100 you save and every ₦200 you pay in bills.</div></div><div class="card"><div class="ln">100 points<b>= ₦50 in Unallocated</b></div><button class="btn" data-act="redeem"'+(k2?'':' disabled')+'>'+(k2?'Redeem '+k2*100+' points for '+N(k2*50):'You need 100 points')+'</button></div>'+
+    '<h2>Refer and earn</h2><div class="card frm"><div class="sub">Your referral code</div><div class="tok">'+code+'</div><div class="sub">When a friend joins with your code you get 500 points and a ₦200 voucher, and they get 200 points. '+S.refc+' friend'+(S.refc===1?'':'s')+' joined so far.</div><div class="row"><button class="mini" data-act="copy" data-id="'+code+'">Copy code</button></div>'+(S.refUsed?'<div class="sub" style="margin-top:8px">You have already used a referral code.</div>':inp('rcode','Got a referral code?','e.g. TUN482','maxlength="6"')+'<button class="btn" data-act="ref-use">Use code</button>')+'</div>'+
+    '<h2>Vouchers</h2>'+(S.myv.length?S.myv.map((v,i)=>'<div class="card"><div class="ln"><b style="margin-left:0">'+esc(v.code)+'</b><span class="sub">'+esc(v.txt)+'</span><b>'+vTxt(v)+'</b></div><div class="row"><button class="mini pri" data-act="v-use" data-id="'+i+'">Use now</button></div></div>').join(''):'<div class="card sub">No vouchers in your wallet.</div>')+'<div class="card frm">'+inp('vc','Have a voucher code?',(DEMO?'Try SAVE1000, AIRTIME200 or BONUS300':'Voucher code'),'maxlength="14"')+'<button class="btn" data-act="v-code">Redeem code</button></div>'}
+  
+if(mv==='prefs')return mvBack+'<h2>Savings preferences</h2><p class="sub">A preference is an ordered list of budgets your savings are paid from. Create one for each type of savings, then choose it whenever you save or set up an auto-save.</p><div class="card"><b>Default way money is taken</b>'+['piggy','target','long'].map(k=>'<label>'+KN[k]+'<select data-dsrc="'+k+'">'+savOpt(k)+'</select></label>').join('')+'</div>'+['piggy','target','long'].map(k=>'<h2>'+KN[k]+'</h2>'+prefBox(k,true)).join('');
+  if(mv==='set')return mvBack+'<h2>Settings</h2><div class="card"><b>Profile</b><div class="ln">Name<b>'+esc(u.name)+'</b></div><div class="ln">Phone<b>'+esc(u.phone)+'</b></div><div class="ln">Account number<b>'+esc(u.acct)+'</b></div><div class="ln">Tier<b>'+u.tier+'</b></div></div>'+
+    '<div class="card"><b>Appearance</b><label>Theme<select data-theme-sel><option value="">Match my phone</option><option value="light"'+(S.theme==='light'?' selected':'')+'>Light</option><option value="dark"'+(S.theme==='dark'?' selected':'')+'>Dark</option></select></label><label class="ck"><input type="checkbox" data-hide'+(S.hide?' checked':'')+'> Hide balances</label></div>'+
+    '<div class="card"><b>Notifications</b> '+(DEMO?'<span class="sub">(demo: none are sent)</span>':'')+''+[['sav','Savings and interest'],['bills','Bills and transfers'],['promo','Offers and rewards']].map(([k,n])=>'<label class="ck"><input type="checkbox" data-notif="'+k+'"'+(S.notif[k]?' checked':'')+'> '+n+'</label>').join('')+'</div>'+
+    '<div class="card frm"><b>Security</b>'+inp('old','Current PIN','4 digits','type="password" inputmode="numeric" maxlength="4"')+inp('nw','New PIN','4 digits','type="password" inputmode="numeric" maxlength="4"')+'<button class="btn" data-act="pin-set">Change PIN</button></div>'+
+    '<div class="card frm"><b>Transfer limit</b><div class="ln">Tier '+u.tier+' limit<b>'+N(LIM[u.tier])+'</b></div><div class="ln">Your limit now<b>'+N(limOf(u))+'</b></div>'+inp('lim','Set a lower daily limit (₦)','Leave empty to reset','type="number" min="1000" inputmode="numeric"')+'<button class="btn" data-act="lim-set">Save limit</button></div>'+
+    '<div class="card"><b>Savings</b><div class="ln">Deduction preferences<b><button class="mini" data-act="mv" data-id="prefs">Manage</button></b></div></div>';
+  return '<div class="hero"><div class="sub">'+esc(u.name)+'</div><div class="big" style="font-size:22px">'+esc(u.acct)+'</div><div class="sub">PurposePay · Tier '+u.tier+' · '+S.pts+' points</div></div>'+row('set','⚙️','Settings','Profile, security, limits, appearance')+row('prefs','📋','Savings preferences','How money is taken for each type of savings')+row('pts','🎁','Rewards','Points for saving and paying bills')+row('tx','🧾','Transactions','Everything you have done')+row('ussd','📟','USSD banking','Dial *999# on any phone, no internet needed')+'<button class="btn alt" data-act="logout">Log out</button>';
+}
+function vAdd(){const u=S.user||{acct:'',name:''};return '<div class="card frm"><b>Add money</b><div class="ln">Bank<b>PurposePay</b></div><div class="ln">Account number<b>'+esc(u.acct)+'</b></div><div class="ln">Account name<b>'+esc(u.name.toUpperCase())+'</b></div><p class="sub">Send money to this account from any bank app. It arrives in Unallocated. </p>'+(DEMO?'<div class="row"><button class="mini" data-act="go" data-id="demo">Simulate a deposit in the Demo tab</button></div>':'')+'</div>'}
+const VFEE=300,PFEE=1500;
+const mkCard=(type,name,bind,limit)=>{const d=new Date(BASE);return{id:++S.seq,type,name,num:'9999'+Array.from({length:12},()=>Math.floor(Math.random()*10)).join(''),exp:String(d.getMonth()+1).padStart(2,'0')+'/'+String((d.getFullYear()+4)%100).padStart(2,'0'),cvv:String(100+Math.floor(Math.random()*900)),frozen:false,limit,bind,status:'active',day:0,spent:0}};
+const fmtNum=n=>n.replace(/(.{4})/g,'$1 ').trim(),maskNum=n=>'•••• •••• •••• '+n.slice(-4);
+const cardVis=(c,full)=>'<div class="ccard'+(c.type==='virtual'?' virt':'')+(c.frozen?' frz':'')+'"><div class="ct"><b>PurposePay</b><span>'+(c.type==='virtual'?'VIRTUAL':'DEBIT')+'</span></div><div class="cn">'+(full?fmtNum(c.num):maskNum(c.num))+'</div><div class="cb"><span>'+esc(c.name)+'</span><span>'+c.exp+'</span></div>'+(c.frozen?'<div class="fz">FROZEN</div>':c.status==='requested'?'<div class="fz">ON ITS WAY</div>':c.bind&&get(c.bind)?'<div class="fz">'+esc(get(c.bind).n.toUpperCase())+' ONLY</div>':'')+'</div>';
+function vCard(){
+  const cv=S.cv,cb='<button class="mini" data-act="cv" data-id="">‹ Cards</button>',mc=/^c:(\d+)$/.exec(cv);
+  if(cv==='new-v')return cb+'<h2>New virtual card</h2><div class="card frm"><label>Card name<input name="n" maxlength="20" placeholder="e.g. Online shopping"></label><label>Spend only from<select name="bind"><option value="">Use my budget rules</option>'+srcOpt()+'</select></label><label>Daily limit (₦, optional)<input name="lim" type="number" min="1000" inputmode="numeric"></label><p class="sub">Creation fee '+N(VFEE)+' (demo), taken using your budget priority. A card tied to one budget can never spend from the others.</p><button class="btn" data-act="c-newv">Create card</button></div>';
+  if(cv==='new-p')return cb+'<h2>Get a physical card</h2>'+(S.cards.some(c=>c.type==='physical')?'<div class="card sub">You already have a physical card. Block it from its screen to order a replacement.</div>':'<div class="card frm"><div class="ln">Name on card<b>'+esc(S.user.name.toUpperCase())+'</b></div><label>City<select name="city"><option>Lagos</option><option>Abuja</option><option>Ibadan</option><option>Port Harcourt</option><option>Kano</option><option>Other</option></select></label><label>Delivery address<input name="addr" maxlength="60" placeholder="Street and area"></label><p class="sub">Delivery fee '+N(PFEE)+' (demo), taken using your budget priority. Your card follows your Budgets rules at every POS.</p><button class="btn" data-act="c-newp">Request card</button></div>');
+  if(mc){
+    const c=S.cards.find(x=>x.id===+mc[1]);if(!c){S.cv='';return vCard()}
+    const shown=S.reveal===c.id,ask=S.ask==='c'+c.id;
+    return cb+'<div style="margin-top:8px">'+cardVis(c,shown)+'</div>'+
+      (c.status==='requested'?'<div class="card"><div class="sub">Your card is on its way. Delivery usually takes a few days.</div>'+(DEMO?'<button class="mini" data-act="go" data-id="demo">Deliver it in the Demo tab</button>':'')+'</div>':
+      (shown?'<div class="card"><div class="ln">CVV<b>'+c.cvv+'</b></div><div class="sub">Demo card. These are not real card numbers.</div></div>':'<div class="card frm"><label>Enter your PIN to see card details<input name="pin" type="password" inputmode="numeric" maxlength="4"></label><button class="btn" data-act="c-show" data-id="'+c.id+'">Show card details</button></div>')+
+      '<div class="actions"><button class="btn alt" data-act="c-freeze" data-id="'+c.id+'">'+(c.frozen?'Unfreeze card':'Freeze card')+'</button><button class="btn alt" data-act="ask" data-id="c'+c.id+'">'+(c.type==='virtual'?'Delete card':'Block card')+'</button></div>'+
+      (ask?'<div class="card"><div class="sub">'+(c.type==='virtual'?'This deletes the card for good.':'This blocks the card for good. You can then order a replacement.')+'</div><div class="row"><button class="mini pri" data-act="c-del" data-id="'+c.id+'">Confirm</button><button class="mini" data-act="ask-no">Cancel</button></div></div>':'')+
+      '<div class="card frm"><b>Daily limit</b><div class="ln">Now<b>'+(c.limit?N(c.limit):'No limit')+'</b></div><label>New limit (₦, empty = none)<input name="lim" type="number" min="1000" inputmode="numeric"></label><button class="btn" data-act="c-lim" data-id="'+c.id+'">Save limit</button></div>'+
+      (c.type==='virtual'?'<div class="card frm"><b>Spend only from</b><select name="bind" aria-label="Budget"><option value="">Use my budget rules</option>'+S.order.map(id=>'<option value="'+id+'"'+(c.bind===id?' selected':'')+'>'+get(id).ic+' '+esc(get(id).n)+'</option>').join('')+'</select><button class="btn" data-act="c-bind" data-id="'+c.id+'">Save</button></div>':'<div class="card sub">This card follows your rules in Budgets: automatic by merchant, an active budget, or your priority order.</div>'));
+  }
+  return '<h2>Cards</h2>'+S.cards.map(c=>'<button class="cardbtn" data-act="cv" data-id="c:'+c.id+'" aria-label="Open card ending '+c.num.slice(-4)+'">'+cardVis(c)+'</button>').join('')+'<div class="actions"><button class="btn" data-act="cv" data-id="new-v">＋ Virtual card</button><button class="btn alt" data-act="cv" data-id="new-p">Get a physical card</button></div><p class="sub">One account, many cards. Tie a virtual card to one budget, so a card for online shopping can only spend from the budget you choose. Numbers here are demo numbers, not real cards.</p>';
+}
+function spendSave(amt){
+  const c=S.sas;if(!c.on)return;
+  const[m,v]=c.pick.split(':'),x=m==='pct'?Math.round(amt*+v/100):Math.ceil(amt/+v)*+v-amt;
+  if(x<=0)return;
+  const g=c.to==='piggy'?null:S.goals.find(y=>y.id===+c.to);
+  if(c.to!=='piggy'&&!g)return;
+  const r=runSrc(c.src,x);
+  if(!r.ok){L('Spend & Save skipped: not enough money for '+N(x),1);return}
+  if(g)g.s+=x;else S.piggy+=x;
+  c.total+=x;earn(Math.floor(x/100));H(g?'g'+g.id:'piggy','Spend & Save + '+N(x));
+  L('💸 Spend & Save: <b>'+N(x)+'</b> saved into '+(g?esc(g.n):'🐷 Piggy bank'),0,TX('Spend & Save',x,r.takes,'save'));
+}
+const refCode=u=>(u.first.toUpperCase().replace(/[^A-Z]/g,'')+'XXX').slice(0,3)+u.phone.slice(-3);
+const vTxt=v=>v.kind==='pts'?v.v+' points':N(v.v);
+const VCODES={SAVE1000:{txt:'Savings boost',kind:'piggy',v:1000},AIRTIME200:{txt:'Airtime gift',kind:'airtime',v:200},BONUS300:{txt:'Bonus points',kind:'pts',v:300}};
+function applyV(v){
+  if(v.kind==='cash')get('un').bal+=v.v;
+  else if(v.kind==='piggy'){S.piggy+=v.v;H('piggy','Voucher + '+N(v.v))}
+  else if(v.kind==='airtime')(get('data')||get('un')).bal+=v.v;
+  else earn(v.v);
+  S.rev.rw+=v.kind==='pts'?v.v/2:v.v;
+  L('🎟️ Voucher <b>'+esc(v.code)+'</b> redeemed: '+vTxt(v));
+}
+const US_MAIN='PurposePay\n1 Balance\n2 Transfer\n3 Airtime\n4 Pay merchant\n5 Move money\n6 Save to Piggy bank\n0 Exit';
+const usList=()=>S.order.map((id,i)=>(i+1)+' '+get(id).n+' '+N(get(id).bal)).join('\n');
+const usMer=()=>'Merchant code:\n'+MERCH.slice(0,7).map((m,i)=>(1001+i)+' '+m[0]).join('\n');
+function ussdIn(raw){
+  const u=S.us,t=String(raw).trim(),d=u.d,st=u.st,amt=Math.round(+t),to=(s,x)=>{u.st=s;u.t=x},end=m=>to('end',m+'\n\nDial *999# to start again.'),menu=()=>to('main',US_MAIN);
+  if(st==='idle'||st==='end'){if(t==='*999#'){u.d={};u.tries=0;menu()}else to('idle','Invalid USSD code. Dial *999# (demo).');return}
+  if(st==='main'){
+    if(t==='1')return to('bal','Spendable '+N(S.b.reduce((a,b)=>a+b.bal,0))+'\n'+usList()+'\nPiggy bank '+N(S.piggy)+'\n\n0 Back');
+    if(t==='2')return to('tx1','Enter account number (10 digits)');
+    if(t==='3')return to('air1','Airtime amount (₦50 or more)');
+    if(t==='4')return to('m1',usMer());
+    if(t==='5')return to('mv1','Move from:\n'+usList());
+    if(t==='6')return to('sv1','Amount to save in Piggy bank');
+    if(t==='0')return end('Thank you.');
+    return to('main','Invalid choice.\n'+US_MAIN);
+  }
+  if(st==='bal')return menu();
+  if(st==='tx1'){if(!/^\d{10}$/.test(t))return to('tx1','Invalid account number.\nEnter account number (10 digits)');d.acct=t;d.name=NAMES[[...t].reduce((a,c)=>a+ +c,0)%NAMES.length];return to('tx2',d.name+'\nEnter amount')}
+  if(st==='tx2'){if(!(amt>0))return to('tx2','Invalid amount.\nEnter amount');d.amt=amt;d.kind='tx';return to('pin','Send '+N(amt)+' to '+d.name+'\nEnter your PIN')}
+  if(st==='air1'){if(!(amt>=50))return to('air1','Minimum is ₦50.\nAirtime amount');d.amt=amt;d.kind='air';return to('pin','Buy '+N(amt)+' airtime for '+S.user.phone+'\nEnter your PIN')}
+  if(st==='m1'){const i=+t-1001;if(!(i>=0&&i<7))return to('m1','Invalid code.\n'+usMer());d.m=i;return to('m2',MERCH[i][0]+'\nEnter amount')}
+  if(st==='m2'){if(!(amt>0))return to('m2','Invalid amount.\nEnter amount');d.amt=amt;d.kind='m';return to('pin','Pay '+N(amt)+' to '+MERCH[d.m][0]+'\nEnter your PIN')}
+  if(st==='mv1'){const i=+t-1;if(!S.order[i])return to('mv1','Invalid choice.\nMove from:\n'+usList());d.from=S.order[i];return to('mv2','Move to:\n'+usList())}
+  if(st==='mv2'){const i=+t-1;if(!S.order[i]||S.order[i]===d.from)return to('mv2','Choose a different budget.\nMove to:\n'+usList());d.to=S.order[i];return to('mv3','Amount to move from '+get(d.from).n+' to '+get(d.to).n)}
+  if(st==='mv3'){const a=get(d.from),b=get(d.to);if(!(amt>0&&amt<=a.bal))return to('mv3','Invalid amount. '+a.n+' has '+N(a.bal)+'.\nAmount');a.bal-=amt;b.bal+=amt;L('📟 USSD: moved <b>'+N(amt)+'</b> from '+nm(a.id)+' to '+nm(b.id));return end('Moved '+N(amt)+' from '+a.n+' to '+b.n+'.')}
+  if(st==='sv1'){if(!(amt>0))return to('sv1','Invalid amount.\nAmount to save');d.amt=amt;d.kind='sv';return to('pin','Save '+N(amt)+' in Piggy bank\nEnter your PIN')}
+  if(st==='pin'){
+    if(t!==S.user.pin){u.tries++;return u.tries>=3?end('Too many wrong PIN attempts.'):to('pin','Wrong PIN. Try again.\nEnter your PIN')}
+    const a=d.amt;
+    if(d.kind==='tx'){if(S.sent.d!==S.day)S.sent={d:S.day,a:0};if(S.sent.a+a>limOf(S.user))return end('Over your daily limit of '+N(limOf(S.user))+'.');const r=spend(a,'',null);if(!r.ok)return end('Failed. Your budgets are short by '+N(r.short)+'.');S.sent.a+=a;L('📟 USSD: <b>'+N(a)+'</b> sent to '+esc(d.name)+', paid from '+split(r.takes),0,TX('USSD transfer to '+d.name,a,r.takes,'send'));spendSave(a);return end('Sent '+N(a)+' to '+d.name+'.')}
+    if(d.kind==='air'){const r=spend(a,auto('airtime'),null);if(!r.ok)return end('Failed. Your budgets are short by '+N(r.short)+'.');S.rev.bills+=a*COMM.airtime/100;earn(Math.floor(a/200));L('📟 USSD: <b>'+N(a)+'</b> airtime paid from '+split(r.takes),0,TX('USSD airtime',a,r.takes,'bill'));spendSave(a);return end('Airtime of '+N(a)+' sent.')}
+    if(d.kind==='m'){const m=MERCH[d.m],p=S.mode==='auto'?m[1]:S.mode==='active'?S.active:'',r=spend(a,p,null);if(!r.ok)return end('Declined. Your budgets are short by '+N(r.short)+'.');if(m[1])S.rev.pos+=a*0.005;L('📟 USSD: <b>'+N(a)+'</b> at '+m[0]+' paid from '+split(r.takes),0,TX('USSD payment: '+m[0],a,r.takes,'card'));spendSave(a);return end('Paid '+N(a)+' to '+m[0]+'.')}
+    const r=runSrc(S.dsrc.piggy||'prio',a);if(!r.ok)return end('Failed. Not enough money in your chosen budgets.');S.piggy+=a;earn(Math.floor(a/100));H('piggy','+ '+N(a)+' added (USSD)');L('📟 USSD: saved <b>'+N(a)+'</b> in 🐷 Piggy bank');return end('Saved '+N(a)+' in Piggy bank.');
+  }
+}
+function vUssd(){
+  const u=S.us,idle=u.st==='idle'||u.st==='end';
+  return '<h2>USSD banking</h2><p class="sub">USSD works on any phone with no internet or app, so people without smartphones can still use their budgets. In this demo the code is *999#. It can show balances, transfer, buy airtime, pay merchants, move money between budgets and save.</p><div class="phone"><pre class="ussd">'+esc(u.t||'Dial *999# to start')+'</pre><div class="frm"><input name="us" autocomplete="off" placeholder="'+(idle?'*999#':u.st==='pin'?'PIN':'Reply')+'" aria-label="USSD input"'+(u.st==='pin'?' type="password"':'')+'><div class="row"><button class="mini pri" data-act="us-send">'+(idle?'Call':'Send')+'</button><button class="mini" data-act="us-cancel">Cancel</button></div></div></div>';
+}
+const TX=(title,amt,takes,kind)=>{const id=++S.seq;S.txs.unshift({id,d:S.day,title,amt,takes:takes.map(t=>({id:t.id,amt:t.amt})),kind:kind||'pay',moves:[]});S.txs.length=Math.min(S.txs.length,200);return id};
+const TF=[['','All'],['bill','Bills'],['send','Transfers'],['card','Cards'],['save','Savings']];
+const logRow=(x,d)=>{const inner=(d?'<span class="sub">'+dayStr(x.d||0)+'</span>':'')+x.t;return x.tx&&S.txs.some(t=>t.id===x.tx)?'<button class="ln txr'+(x.bad?' bad':'')+'" data-act="txo" data-id="'+x.tx+'">'+inner+'<b>›</b></button>':'<div class="ln'+(x.bad?' bad':'')+'">'+inner+'</div>'};
+function vTxList(){
+  const rows=S.tf?S.txs.filter(t=>t.kind===S.tf):null;
+  return mvBack+'<h2>Transactions</h2><div class="subtabs" style="grid-template-columns:repeat(5,1fr)">'+TF.map(([k,n])=>'<button data-act="tf" data-id="'+k+'" aria-pressed="'+(S.tf===k)+'"'+(S.tf===k?' class="on"':'')+'>'+n+'</button>').join('')+'</div><p class="sub">Tap a payment to see where the money came from. You can change it afterwards.</p><div class="card">'+(rows?(rows.length?rows.map(t=>'<button class="ln txr" data-act="txo" data-id="'+t.id+'"><span class="sub">'+dayStr(t.d)+'</span>'+esc(t.title)+'<b>'+N(t.amt)+'</b></button>').join(''):'<div class="sub">Nothing here yet.</div>'):(S.log.length?S.log.map(x=>logRow(x,true)).join(''):'<div class="sub">Nothing yet.</div>'))+'</div>';
+}
+function vTxd(){
+  const t=S.txs.find(x=>x.id===S.tid),bk='<button class="mini" data-act="mv" data-id="tx">‹ Transactions</button>';
+  if(!t)return bk+'<div class="card sub">That transaction is no longer available.</div>';
+  const from=t.takes.filter(k=>get(k.id));
+  return bk+'<div class="hero" style="margin-top:8px"><div class="sub">'+dayStr(t.d)+'</div><div class="big">'+N(t.amt)+'</div><div class="sub">'+esc(t.title)+'</div></div><div class="card"><b>Paid from</b>'+bar(t.takes)+t.takes.map(k=>'<div class="ln">'+nm(k.id)+'<b>'+N(k.amt)+'</b></div>').join('')+'</div>'+
+    (from.length?'<div class="card frm" data-id="'+t.id+'"><b>Paid from the wrong budget?</b><div class="sub">Choose where this money should have come from. Both budgets change and this payment is updated.</div><label>Take it back from<select name="rf">'+from.map(k=>'<option value="'+k.id+'">'+get(k.id).ic+' '+esc(get(k.id).n)+' ('+N(k.amt)+' in this payment)</option>').join('')+'</select></label><label>and charge it to<select name="rt">'+S.order.map(id=>'<option value="'+id+'">'+get(id).ic+' '+esc(get(id).n)+' ('+N(get(id).bal)+')</option>').join('')+'</select></label><label>Amount (₦)<input name="amt" type="number" min="1" inputmode="numeric" value="'+from[0].amt+'"></label><button class="btn" data-act="tx-re">Reallocate</button></div>':'')+
+    (t.moves&&t.moves.length?'<h2>Changes</h2><div class="card">'+t.moves.map(m=>'<div class="ln"><span class="sub">'+dayStr(m.d)+'</span>'+m.t+'</div>').join('')+'</div>':'');
+}
+document.addEventListener('keydown',e=>{
+  if(e.key!=='Enter'||!e.target||e.target.tagName!=='INPUT'||e.target.type==='checkbox')return;
+  const fr=e.target.closest('.frm');if(!fr)return;
+  const b=fr.querySelector('.btn[data-act],.mini.pri[data-act]');
+  if(b){e.preventDefault();b.click()}
+});
+/* DEMO-START: everything between DEMO-START and DEMO-END exists only for demonstrations.
+   Set DEMO=false to hide the Demo tab, the demo buttons and the demo hints, or delete this block
+   (and the lines that mention DEMO) to remove it for good. */
+const DEMO=true;
+function vDemoTab(){
+  const req=S.cards.filter(c=>c.status==='requested');
+  return '<button class="mini" data-act="go" data-id="home">‹ Home</button><h2>Demo tools</h2><p class="sub">Everything on this screen is only for demonstrations. To remove it later, set DEMO=false in the code, or delete the code between the DEMO-START and DEMO-END markers.</p>'+
+    clock()+
+    '<div class="card frm"><b>Deposit</b><div class="sub">Pretend money arrives from another bank.</div>'+inp('amt','Amount (₦)','5000','type="number" min="100" inputmode="numeric"')+chips()+'<button class="btn" data-act="dep">Simulate a deposit</button></div>'+
+    '<div class="card"><b>Friends and cards</b><div class="row"><button class="mini" data-act="ref-sim">Simulate a friend joining with my code</button>'+req.map(c=>'<button class="mini" data-act="c-deliver" data-id="'+c.id+'">Deliver my requested card</button>').join('')+'</div></div>'+
+    (S.lastSend?'<div class="card"><b>Receiver view</b><div class="sub">Pretend the person you last sent money to is receiving it: '+N(S.lastSend.amt)+' with your allocation.</div><button class="mini pri" data-act="prev">Show it as an incoming transfer</button></div>':'')+
+    vDemo()+
+    '<div class="card"><b>Handy codes</b><div class="ln">Sign-up phone code<b>123456</b></div><div class="ln">Demo account PIN<b>1234</b></div><div class="ln">USSD code<b>*999#</b></div><div class="ln">Voucher codes<b>SAVE1000 · AIRTIME200 · BONUS300</b></div><div class="row"><button class="mini" data-act="restart">Restart the demo</button></div></div>';
+}
+/* DEMO-END */
+const TABS=[['home','🏠','Home'],['save','🐷','Savings'],['bud','🧮','Budgets'],['card','💳','Card'],['me','👤','Me']];
+const V={home:vHome,pay:vPay,save:vSave,bud:vBud,card:vCard,me:vMe,demo:vDemoTab};
+function render(){
+  $('#nav').innerHTML=TABS.map(([k,i,n])=>'<button data-tab="'+k+'"'+((S.tab==='pay'?'home':S.tab)===k?' class="on" aria-current="page"':'')+'><span>'+i+'</span>'+n+'</button>').join('');
+  $('#toast').innerHTML=S.msg?'<p'+(S.bad?' class="bad"':'')+'>'+S.msg+'</p>':'';
+  $('#view').innerHTML=S.ob?vOb():V[S.tab]();
+  document.querySelector('nav').hidden=!!S.ob;
+  $('#hdr').innerHTML='<h1>PurposePay</h1>'+(S.user&&!S.ob?'<span class="sub">Hi, '+esc(S.user.first)+' · '+(DEMO?'<button class="mini" data-act="go" data-id="demo">🧪 Demo</button> ':'')+'<button class="mini" data-act="logout">Log out</button></span>':(DEMO?'<span class="sub">Demo bank · simulated money</span>':''));
+}
+document.addEventListener('click',e=>{
+  const fl=e.target.closest('[data-fill]');
+  if(fl){const i=fl.closest('.frm').querySelector('[name="amt"]');if(i)i.value=fl.dataset.fill;return}
+  const t=e.target.closest('[data-act]'),tb=e.target.closest('[data-tab]');
+  if(t){S.msg='';try{run(t)}catch(x){say('Something went wrong. Try again.',1)}render();if(['go','sv','mv','cv','txo','ob-go'].includes(t.dataset.act))scrollTo(0,0)}
+  else if(tb){if(tb.dataset.tab===S.tab){S.sv='';S.mv='';S.cv=''}S.tab=tb.dataset.tab;S.svc='';S.msg='';S.rc=null;S.pos='';S.ask='';render();scrollTo(0,0)}
+});
+document.addEventListener('change',e=>{
+  const t=e.target,lf=t.closest&&t.closest('[data-lf]');
+  if(lf&&t.name==='mo'){const el=document.getElementById('lrate');if(el)el.textContent=lockRate(+val(lf,'mo'),+val(lf,'amt')||0)+'% a year';return}
+  if(t.matches('[data-mode]'))S.mode=t.value;
+  else if(t.matches('[data-active]'))S.active=t.value;
+  else if(t.matches('[data-feat]'))S.feat=t.checked;
+  else if(t.matches('[data-tfeat]'))S.tfeat=t.checked;
+  else if(t.matches('[data-hide]'))S.hide=t.checked;
+  else if(t.matches('[data-notif]'))S.notif[t.dataset.notif]=t.checked;
+  else if(t.matches('[data-dsrc]'))S.dsrc[t.dataset.dsrc]=t.value;
+  else if(t.matches('[data-theme-sel]')){S.theme=t.value;const de=document.documentElement;if(de){t.value?de.setAttribute('data-theme',t.value):de.removeAttribute('data-theme')}}
+  else return;
+  render();
+});
+document.addEventListener('input',e=>{
+  const t=e.target;
+  if(t.dataset&&t.dataset.sr!=null)SR[t.dataset.sr].amt=+t.value||0;
+  if(t.name==='sender')S.from=t.value;
+  if(t.dataset&&t.dataset.tr!=null){TR[t.dataset.tr].amt=+t.value||0;const el=document.getElementById('ttot');if(el)el.textContent=N(TR.reduce((a,r)=>a+(r.amt||0),0))}
+  const lf=t.closest&&t.closest('[data-lf]');
+  if(lf&&t.name==='amt'){const el=document.getElementById('lrate');if(el)el.textContent=lockRate(+val(lf,'mo'),+val(lf,'amt')||0)+'% a year'}
+});
+let dragEl=null;
+document.addEventListener('pointerdown',e=>{
+  const h=e.target.closest('[data-h]');if(!h)return;
+  e.preventDefault();dragEl=h.closest('.bc');dragEl.classList.add('drag');
+  try{h.setPointerCapture(e.pointerId)}catch(x){}
+});
+document.addEventListener('pointermove',e=>{
+  if(!dragEl)return;
+  const box=$('#bl'),sib=[...box.querySelectorAll('.bc')].filter(c=>c!==dragEl);
+  const after=sib.find(c=>{const r=c.getBoundingClientRect();return e.clientY<r.top+r.height/2});
+  after?box.insertBefore(dragEl,after):box.appendChild(dragEl);
+  [...box.querySelectorAll('.bc')].forEach((c,i)=>{c.firstElementChild.lastChild.nodeValue=i+1});
+});
+const endDrag=()=>{
+  if(!dragEl)return;
+  S.order=[...document.querySelectorAll('#bl .bc')].map(c=>c.dataset.id);
+  dragEl=null;render();
+};
+document.addEventListener('pointerup',endDrag);
+document.addEventListener('pointercancel',endDrag);
+render();
+</script>
+<script>
+// Shows a clear label while the app is a prototype. It follows the DEMO flag above.
+document.getElementById('proto').textContent=DEMO?'Prototype: no real money moves in this app':'';
+if('serviceWorker' in navigator&&location.protocol!=='file:'){addEventListener('load',()=>navigator.serviceWorker.register('sw.js').catch(()=>{}))}
+</script>
+</body>
+</html>
